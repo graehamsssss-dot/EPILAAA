@@ -1,0 +1,39 @@
+<div class="page">
+  <div class="panel">
+    <h2>Inventory Management</h2>
+    <div class="form-grid">
+      <input [(ngModel)]="itemName" type="text" placeholder="Item Name">
+      <input [(ngModel)]="linkedService" type="text" placeholder="Linked Service">
+      <input [(ngModel)]="currentStock" type="number" placeholder="Current Stock">
+    </div>
+    <button class="primary-btn" (click)="addItem()">Add Item</button>
+  </div>
+
+  <div class="panel">
+    <h3>Inventory Items</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Linked Service</th>
+            <th>Current Stock</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td>{{ item.name }}</td>
+            <td>{{ item.linkedService }}</td>
+            <td>{{ item.stock }}</td>
+            <td>
+              <span class="badge" [class.low]="item.status === 'Low Stock'">{{ item.status }}</span>
+            </td>
+            <td><button class="secondary-btn" (click)="restock(item)">Restock +10</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

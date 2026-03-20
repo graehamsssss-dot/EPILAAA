@@ -1,0 +1,37 @@
+<div class="layout-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" alt="ePILA Logo" class="brand-logo" />
+      <div>
+        <h2>ePILA</h2>
+        <p>Admin Portal</p>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a
+        *ngFor="let item of adminNavItems"
+        [routerLink]="item.path"
+        routerLinkActive="active-link"
+        class="nav-link"
+      >
+        {{ item.label }}
+      </a>
+    </nav>
+
+    <button class="logout-btn" type="button" (click)="logout()">Logout</button>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div>
+        <h1>ePILA Admin</h1>
+        <p>Healthcare appointment, queue, and inventory management</p>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

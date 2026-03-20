@@ -1,0 +1,20 @@
+<div class="panel">
+  <h2>Patient Settings</h2>
+
+  <div class="field">
+    <label>Email Address</label>
+    <input [(ngModel)]="settings.email" type="email">
+  </div>
+
+  <label class="toggle">
+    <input [(ngModel)]="settings.notifications" type="checkbox">
+    <span>Enable notifications</span>
+  </label>
+
+  <label class="toggle">
+    <input [(ngModel)]="settings.privacy" type="checkbox">
+    <span>Enable privacy mode</span>
+  </label>
+
+  <button class="primary-btn" type="button">Save Settings</button>
+</div>

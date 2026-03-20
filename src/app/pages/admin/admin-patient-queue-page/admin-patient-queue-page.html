@@ -1,0 +1,38 @@
+<div class="page">
+  <div class="panel">
+    <div class="top-row">
+      <div>
+        <h2>Patient Queue</h2>
+        <p>Manage daily queue and service progress</p>
+      </div>
+      <input [(ngModel)]="search" type="text" placeholder="Search patient, service, status">
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Scheduled Time</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredQueue; let i = index">
+            <td>{{ row.patientName }}</td>
+            <td>{{ row.time }}</td>
+            <td>{{ row.service }}</td>
+            <td><span [class]="getStatusClass(row.status)">{{ row.status }}</span></td>
+            <td class="action-cell">
+              <button (click)="setStatus(i, 'In Progress')">Start</button>
+              <button (click)="setStatus(i, 'Completed')">Complete</button>
+              <button (click)="setStatus(i, 'Cancelled')">Cancel</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+<div class="dashboard-page">
+  <section class="cards-grid">
+    <div class="stat-card" *ngFor="let card of summaryCards">
+      <p class="card-label">{{ card.title }}</p>
+      <h2 class="card-value">{{ card.value }}</h2>
+      <span class="card-note">{{ card.note }}</span>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Daily Patient Count</h3>
+        <span>Preview</span>
+      </div>
+
+      <div class="chart-placeholder">
+        <div class="bar" style="height: 45%"></div>
+        <div class="bar" style="height: 70%"></div>
+        <div class="bar" style="height: 55%"></div>
+        <div class="bar" style="height: 82%"></div>
+        <div class="bar" style="height: 60%"></div>
+        <div class="bar" style="height: 88%"></div>
+        <div class="bar" style="height: 66%"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Low Stock Overview</h3>
+        <span>Current</span>
+      </div>
+
+      <div class="stock-list">
+        <div class="stock-item" *ngFor="let item of lowStockItems">
+          <strong>{{ item.itemName }}</strong>
+          <span class="stock-badge">{{ item.stock }} left</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <h3>Today Queue</h3>
+      <span>Live preview</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient Name</th>
+            <th>Service</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of todayQueue">
+            <td>{{ row.patientName }}</td>
+            <td>{{ row.service }}</td>
+            <td>{{ row.time }}</td>
+            <td><span [class]="getStatusClass(row.status)">{{ row.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

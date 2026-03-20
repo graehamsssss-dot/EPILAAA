@@ -1,0 +1,21 @@
+<div class="page">
+  <div class="panel">
+    <h2>Admin Settings</h2>
+    <div class="form-grid">
+      <input [(ngModel)]="profile.fullName" type="text" placeholder="Full Name">
+      <input [(ngModel)]="profile.email" type="email" placeholder="Email">
+    </div>
+
+    <label class="toggle">
+      <input [(ngModel)]="profile.notifications" type="checkbox">
+      <span>Enable notifications</span>
+    </label>
+
+    <label class="toggle">
+      <input [(ngModel)]="profile.privacyMode" type="checkbox">
+      <span>Enable privacy mode</span>
+    </label>
+
+    <button class="primary-btn" type="button">Save Settings</button>
+  </div>
+</div>

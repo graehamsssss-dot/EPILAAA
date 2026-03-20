@@ -1,0 +1,46 @@
+<div class="page">
+  <div class="panel">
+    <div class="filter-row">
+      <div>
+        <h2>Monthly Report</h2>
+        <p>Printable monthly health report preview</p>
+      </div>
+
+      <div class="filters">
+        <select [(ngModel)]="selectedMonth">
+          <option>January</option>
+          <option>February</option>
+          <option>March</option>
+          <option>April</option>
+          <option>May</option>
+          <option>June</option>
+          <option>July</option>
+          <option>August</option>
+          <option>September</option>
+          <option>October</option>
+          <option>November</option>
+          <option>December</option>
+        </select>
+        <input [(ngModel)]="selectedYear" type="number">
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="stat-card" *ngFor="let card of reportCards">
+        <p>{{ card.label }}</p>
+        <h3>{{ card.value }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel printable">
+    <h3>{{ selectedMonth }} {{ selectedYear }} Report Summary</h3>
+    <ul>
+      <li>Total patients served this month: 320</li>
+      <li>Total services completed: 540</li>
+      <li>Most used service: Vaccination</li>
+      <li>Queue completion rate: 89%</li>
+      <li>Low stock items requiring action: 6</li>
+    </ul>
+  </div>
+</div>

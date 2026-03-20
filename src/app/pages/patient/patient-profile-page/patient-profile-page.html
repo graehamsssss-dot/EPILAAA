@@ -1,0 +1,20 @@
+<div class="page">
+  <div class="profile-grid">
+    <div class="panel qr-panel">
+      <h2>{{ patient.fullName }}</h2>
+      <p class="muted">Patient ID: {{ patient.patientId }}</p>
+      <img [src]="patient.qrCodeUrl" alt="QR Code">
+    </div>
+
+    <div class="panel">
+      <h3>Personal Information</h3>
+      <div class="info-grid">
+        <div><strong>Age</strong><span>{{ patient.age }}</span></div>
+        <div><strong>Sex</strong><span>{{ patient.sex }}</span></div>
+        <div><strong>Contact</strong><span>{{ patient.contactNumber }}</span></div>
+        <div><strong>Barangay</strong><span>{{ patient.barangay }}</span></div>
+        <div><strong>Blood Type</strong><span>{{ patient.bloodType }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>

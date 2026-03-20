@@ -1,0 +1,72 @@
+:host { display: block; }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.service-card {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.service-card h3 {
+  margin-top: 0;
+}
+
+.service-card p {
+  color: #6b7280;
+}
+
+.service-card span {
+  display: inline-block;
+  margin: 10px 0 14px;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.service-card button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #14213d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 900px) {
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+}

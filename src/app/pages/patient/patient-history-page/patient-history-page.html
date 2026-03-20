@@ -1,0 +1,21 @@
+<div class="panel">
+  <h2>Service History</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of history">
+          <td>{{ item.service }}</td>
+          <td>{{ item.date }}</td>
+          <td><span class="badge">{{ item.status }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

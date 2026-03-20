@@ -1,0 +1,70 @@
+<div class="login-page">
+  <div class="form-container">
+    <div class="login-card">
+
+      <div class="login-header">
+        <button class="back-btn" (click)="goToHome()">← Back</button>
+
+        <div class="logo">
+          <img src="/logo.png" alt="ePILA Logo" class="logo-img" />
+          <span class="logo-text">ePILA</span>
+        </div>
+
+        <h1>Welcome Back</h1>
+        <p>Login to access your ePILA portal</p>
+      </div>
+
+      <form (ngSubmit)="login()" class="login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            [(ngModel)]="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <label class="terms-row">
+          <input
+            type="checkbox"
+            name="acceptedTerms"
+            [(ngModel)]="acceptedTerms"
+          />
+          <span>I Accept the Terms of Use</span>
+        </label>
+
+        <div class="error-message" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <button type="submit" class="btn-primary">Login</button>
+
+        <div class="helper-links">
+          <a routerLink="/signup">Create account</a>
+        </div>
+
+        <div class="demo-note">
+          <p><strong>Demo login:</strong></p>
+          <p>Use an email with <strong>admin</strong> to open the Admin Portal.</p>
+          <p>Use any other email to open the Patient Portal.</p>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
