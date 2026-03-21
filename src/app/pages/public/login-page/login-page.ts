@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -16,7 +17,10 @@ export class LoginPage {
   acceptedTerms = false;
   errorMessage = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   goToHome(): void {
     this.router.navigate(['/']);
@@ -36,14 +40,12 @@ export class LoginPage {
     }
 
     if (this.email.toLowerCase().includes('admin')) {
-      localStorage.setItem('epila_token', 'demo-admin-token');
-      localStorage.setItem('epila_role', 'admin');
+      this.authService.loginAs('admin');
       this.router.navigateByUrl('/admin/dashboard');
       return;
     }
 
-    localStorage.setItem('epila_token', 'demo-patient-token');
-    localStorage.setItem('epila_role', 'patient');
+    this.authService.loginAs('patient');
     this.router.navigateByUrl('/patient/profile');
   }
 }

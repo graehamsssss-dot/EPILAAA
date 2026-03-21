@@ -1,20 +1,19 @@
 <div class="signup-page">
   <div class="form-container">
     <div class="signup-card">
-
-      <!-- Header -->
       <div class="signup-header">
         <button class="back-btn" (click)="goToHome()">← Back</button>
+
         <div class="logo">
           <img src="/logo.png" alt="ePILA Logo" class="logo-img" />
           <span class="logo-text">ePILA</span>
         </div>
+
         <h1>Create Your Account</h1>
         <p>Sign up to access your patient portal</p>
         <div class="patient-id-preview" *ngIf="generatedId">ID: {{ generatedId }}</div>
       </div>
 
-      <!-- Success Card -->
       <div *ngIf="submitted" class="success-card">
         <div class="success-icon">✅</div>
         <h2>Sign Up Successful!</h2>
@@ -22,49 +21,97 @@
         <div class="patient-id-box">{{ generatedId }}</div>
 
         <div class="qr-section">
-          <img id="qrCode" [src]="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + generatedId" alt="QR Code" />
+          <img
+            id="qrCode"
+            [src]="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + generatedId"
+            alt="QR Code"
+          />
           <p class="qr-hint">Save this QR code for clinic check-in</p>
           <button class="btn-primary" (click)="downloadQR()">Download QR</button>
         </div>
 
         <div class="summary-card">
           <h3>Account Summary</h3>
-          <div class="summary-row"><span>Name:</span> <strong>{{ form.firstName }} {{ form.middleName }} {{ form.lastName }} {{ form.suffix }}</strong></div>
-          <div class="summary-row"><span>Age / Sex:</span> <strong>{{ form.age }} / {{ form.sex }}</strong></div>
-          <div class="summary-row"><span>Contact:</span> <strong>{{ form.contactNumber }}</strong></div>
-          <div class="summary-row"><span>Barangay:</span> <strong>{{ form.barangay }}</strong></div>
-          <div class="summary-row"><span>Blood Type:</span> <strong>{{ form.bloodType || 'Not specified' }}</strong></div>
+          <div class="summary-row">
+            <span>Name:</span>
+            <strong>{{ form.firstName }} {{ form.middleName }} {{ form.lastName }} {{ form.suffix }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Sex:</span>
+            <strong>{{ form.sex }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Contact:</span>
+            <strong>{{ form.contactNumber }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Barangay:</span>
+            <strong>{{ form.barangay }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Blood Type:</span>
+            <strong>{{ form.bloodType || 'Not specified' }}</strong>
+          </div>
         </div>
 
         <button class="btn-primary" (click)="goToPatientPortal()">Go to Patient Portal →</button>
       </div>
 
-      <!-- Multi-step Form -->
       <div *ngIf="!submitted">
-
-        <!-- Stepper -->
         <div class="stepper">
-          <div class="step" *ngFor="let step of [1,2,3,4,5]" 
-               [class.active]="currentStep === step" 
-               [class.done]="currentStep > step">
+          <div
+            class="step"
+            *ngFor="let step of [1,2,3,4,5]"
+            [class.active]="currentStep === step"
+            [class.done]="currentStep > step"
+          >
             <div class="step-circle">{{ currentStep > step ? '✓' : step }}</div>
             <div class="step-label">
-              {{ step === 1 ? 'Personal Info' : step === 2 ? 'Contact & Address' : step === 3 ? 'Emergency Contact' : step === 4 ? 'Medical Info' : 'Account Security' }}
+              {{
+                step === 1
+                  ? 'Personal Info'
+                  : step === 2
+                  ? 'Contact & Address'
+                  : step === 3
+                  ? 'Emergency Contact'
+                  : step === 4
+                  ? 'Medical Info'
+                  : 'Account Security'
+              }}
             </div>
           </div>
         </div>
 
-        <!-- Step Contents -->
         <div class="step-content" *ngIf="currentStep === 1">
           <h3>Personal Info</h3>
           <div class="form-grid">
-            <div class="field"><label>First Name *</label><input type="text" [(ngModel)]="form.firstName" placeholder="Maria"></div>
-            <div class="field"><label>Middle Name</label><input type="text" [(ngModel)]="form.middleName" placeholder="Santos"></div>
-            <div class="field"><label>Last Name *</label><input type="text" [(ngModel)]="form.lastName" placeholder="Dela Cruz"></div>
-            <div class="field"><label>Suffix</label><input type="text" [(ngModel)]="form.suffix" placeholder="Jr., Sr., III"></div>
-            <div class="field"><label>Date of Birth *</label><input type="date" [(ngModel)]="form.birthDate" (change)="calculateAge()"></div>
-            <div class="field"><label>Age</label><input type="number" [(ngModel)]="form.age" readonly></div>
-            <div class="field"><label>Sex *</label>
+            <div class="field">
+              <label>First Name *</label>
+              <input type="text" [(ngModel)]="form.firstName" placeholder="Maria" />
+            </div>
+
+            <div class="field">
+              <label>Middle Name</label>
+              <input type="text" [(ngModel)]="form.middleName" placeholder="Santos" />
+            </div>
+
+            <div class="field">
+              <label>Last Name *</label>
+              <input type="text" [(ngModel)]="form.lastName" placeholder="Dela Cruz" />
+            </div>
+
+            <div class="field">
+              <label>Suffix</label>
+              <input type="text" [(ngModel)]="form.suffix" placeholder="Jr., Sr., III" />
+            </div>
+
+            <div class="field">
+              <label>Date of Birth *</label>
+              <input type="date" [(ngModel)]="form.birthDate" />
+            </div>
+
+            <div class="field">
+              <label>Sex *</label>
               <select [(ngModel)]="form.sex">
                 <option value="">-- Select --</option>
                 <option *ngFor="let s of sexOptions" [value]="s">{{ s }}</option>
@@ -76,51 +123,89 @@
         <div class="step-content" *ngIf="currentStep === 2">
           <h3>Contact & Address</h3>
           <div class="form-grid">
-            <div class="field"><label>Contact Number *</label><input type="tel" [(ngModel)]="form.contactNumber" placeholder="09XX-XXX-XXXX" required /></div>
-            <div class="field"><label>Email Address</label><input type="email" [(ngModel)]="form.email" placeholder="email@example.com" /></div>
-            <div class="field"><label>Barangay *</label><input type="text" [(ngModel)]="form.barangay" placeholder="Barangay San Jose" required /></div>
+            <div class="field">
+              <label>Contact Number *</label>
+              <input type="tel" [(ngModel)]="form.contactNumber" placeholder="09XX-XXX-XXXX" />
+            </div>
+
+            <div class="field">
+              <label>Email Address</label>
+              <input type="email" [(ngModel)]="form.email" placeholder="email@example.com" />
+            </div>
+
+            <div class="field">
+              <label>Barangay *</label>
+              <input type="text" [(ngModel)]="form.barangay" placeholder="Barangay San Jose" />
+            </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 3">
           <h3>Emergency Contact</h3>
           <div class="form-grid">
-            <div class="field"><label>Contact Person Name *</label><input type="text" [(ngModel)]="form.emergencyContactName" placeholder="Full Name" required /></div>
-            <div class="field"><label>Contact Number *</label><input type="tel" [(ngModel)]="form.emergencyContactNumber" placeholder="09XX-XXX-XXXX" required /></div>
+            <div class="field">
+              <label>Contact Person Name *</label>
+              <input type="text" [(ngModel)]="form.emergencyContactName" placeholder="Full Name" />
+            </div>
+
+            <div class="field">
+              <label>Contact Number *</label>
+              <input type="tel" [(ngModel)]="form.emergencyContactNumber" placeholder="09XX-XXX-XXXX" />
+            </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 4">
           <h3>Medical Information</h3>
           <div class="form-grid">
-            <div class="field"><label>PhilHealth ID</label><input type="text" [(ngModel)]="form.philhealthId" placeholder="PH-XXXXXXXX" /></div>
-            <div class="field"><label>Blood Type</label>
+            <div class="field">
+              <label>PhilHealth ID</label>
+              <input type="text" [(ngModel)]="form.philhealthId" placeholder="PH-XXXXXXXX" />
+            </div>
+
+            <div class="field">
+              <label>Blood Type</label>
               <select [(ngModel)]="form.bloodType">
                 <option value="">-- Select --</option>
                 <option *ngFor="let bt of bloodTypes" [value]="bt">{{ bt }}</option>
               </select>
             </div>
-            <div class="field full-width"><label>Allergies</label><textarea [(ngModel)]="form.allergies" rows="3"></textarea></div>
+
+            <div class="field full-width">
+              <label>Allergies</label>
+              <textarea [(ngModel)]="form.allergies" rows="3"></textarea>
+            </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 5">
           <h3>Account Security</h3>
           <div class="form-grid security-grid">
-
             <div class="field full-width">
               <label>Password *</label>
               <div class="input-wrapper">
-                <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password" placeholder="••••••••" required />
-                <button type="button" class="toggle-btn" (click)="togglePassword()">{{ showPassword ? 'Hide' : 'Show' }}</button>
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  [(ngModel)]="form.password"
+                  placeholder="••••••••"
+                />
+                <button type="button" class="toggle-btn" (click)="togglePassword()">
+                  {{ showPassword ? 'Hide' : 'Show' }}
+                </button>
               </div>
             </div>
 
             <div class="field full-width">
               <label>Confirm Password *</label>
               <div class="input-wrapper">
-                <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="form.confirmPassword" placeholder="••••••••" required />
-                <button type="button" class="toggle-btn" (click)="toggleConfirmPassword()">{{ showConfirmPassword ? 'Hide' : 'Show' }}</button>
+                <input
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  [(ngModel)]="form.confirmPassword"
+                  placeholder="••••••••"
+                />
+                <button type="button" class="toggle-btn" (click)="toggleConfirmPassword()">
+                  {{ showConfirmPassword ? 'Hide' : 'Show' }}
+                </button>
               </div>
             </div>
           </div>
@@ -128,13 +213,17 @@
           <div class="field full-width terms">
             <label>
               <input type="checkbox" [(ngModel)]="form.acceptTerms" />
-              I accept the <a href="#" (click)="openTerms($event)">Terms & Conditions</a>
+              I accept the
+              <button type="button" class="terms-link-btn" (click)="openTerms($event)">
+                Terms & Conditions
+              </button>
             </label>
           </div>
 
           <div class="error-message" *ngIf="form.password && form.confirmPassword && form.password !== form.confirmPassword">
             ⚠️ Passwords do not match!
           </div>
+
           <div class="success-message" *ngIf="form.password && form.confirmPassword && form.password === form.confirmPassword">
             ✅ Passwords match
           </div>
@@ -146,18 +235,19 @@
           <button class="nav-btn primary" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="!canProceed()">Next →</button>
           <button class="nav-btn submit" *ngIf="currentStep === totalSteps" (click)="submitRegistration()" [disabled]="!canProceed()">✓ Sign Up</button>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- Terms Modal -->
   <div class="modal-overlay" *ngIf="showModal">
     <div class="modal-box">
       <button class="modal-close" (click)="closeModal()">✕</button>
       <h2>Terms & Conditions</h2>
       <div class="modal-content">
-        <p>By signing up, you agree to follow the ePILA health center policies and protect patient data according to privacy regulations.</p>
+        <p>
+          By signing up, you agree to follow the ePILA health center policies
+          and protect patient data according to privacy regulations.
+        </p>
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" (click)="closeModal()">Cancel</button>

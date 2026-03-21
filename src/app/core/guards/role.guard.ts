@@ -1,9 +1,16 @@
+import { inject, PLATFORM_ID } from '@angular/core';
 import { CanMatchFn, Router, UrlSegment } from '@angular/router';
-import { inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export function roleGuard(expectedRole: 'admin' | 'patient'): CanMatchFn {
   return (_route, _segments: UrlSegment[]) => {
     const router = inject(Router);
+    const platformId = inject(PLATFORM_ID);
+
+    if (!isPlatformBrowser(platformId)) {
+      return true;
+    }
+
     const role = localStorage.getItem('epila_role');
 
     if (role === expectedRole) {

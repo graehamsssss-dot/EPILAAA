@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-signup-page',
@@ -11,7 +12,10 @@ import { Router } from '@angular/router';
   styleUrl: './signup-page.css',
 })
 export class SignupPage {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   currentStep = 1;
   totalSteps = 5;
@@ -28,7 +32,6 @@ export class SignupPage {
     lastName: '',
     suffix: '',
     birthDate: '',
-    age: null,
     sex: '',
     contactNumber: '',
     email: '',
@@ -51,8 +54,7 @@ export class SignupPage {
   }
 
   goToPatientPortal() {
-    localStorage.setItem('epila_token', 'demo-patient-token');
-    localStorage.setItem('epila_role', 'patient');
+    this.authService.loginAs('patient');
     this.router.navigate(['/patient/profile']);
   }
 
@@ -88,22 +90,6 @@ export class SignupPage {
     }
   }
 
-  calculateAge() {
-    if (!this.form.birthDate) return;
-
-    const birthDate = new Date(this.form.birthDate);
-    const today = new Date();
-
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    this.form.age = age;
-  }
-
   togglePassword() {
     this.showPassword = !this.showPassword;
   }
@@ -131,14 +117,11 @@ export class SignupPage {
 
     this.generatedId = 'EPILA-' + Math.floor(100000 + Math.random() * 900000);
     this.submitted = true;
-
-    localStorage.setItem('epila_token', 'demo-patient-token');
-    localStorage.setItem('epila_role', 'patient');
+    this.authService.loginAs('patient');
   }
 
   downloadQR() {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${this.generatedId}`;
-
     const link = document.createElement('a');
     link.href = qrUrl;
     link.download = `${this.generatedId}.png`;

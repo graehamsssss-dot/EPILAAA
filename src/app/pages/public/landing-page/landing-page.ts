@@ -1,20 +1,25 @@
-import { CommonModule } from '@angular/common';
-import { Component, HostListener } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-landing-page',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.css',
 })
 export class LandingPage {
-   currentYear = new Date().getFullYear();
+  currentYear = new Date().getFullYear();
   activeModal: string | null = null;
   isScrolled = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: object,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
 
-  // Navigation
   navigateToLogin() {
     this.router.navigate(['/login']);
   }
@@ -23,7 +28,6 @@ export class LandingPage {
     this.router.navigate(['/signup']);
   }
 
-  // Modals
   openModal(modal: string) {
     this.activeModal = modal;
   }
@@ -32,40 +36,46 @@ export class LandingPage {
     this.activeModal = null;
   }
 
-  // Scroll effect
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 20;
+  scrollToSection(sectionId: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const element = this.document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
-  // Landing page features (use icon class names or text icons)
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.isScrolled = this.document.documentElement.scrollTop > 20;
+  }
+
   features = [
     {
-      icon: 'event',  // Can be Material Icon string or CSS class
+      icon: 'event',
       title: 'Easy Booking',
-      description: 'Book clinic services quickly online.'
+      description: 'Book clinic services quickly and conveniently online.',
     },
     {
       icon: 'schedule',
       title: 'Queue Monitoring',
-      description: 'Track waiting time and queue number.'
+      description: 'Track waiting times and patient queue progress in real time.',
     },
     {
       icon: 'health_and_safety',
       title: 'Quality Healthcare',
-      description: 'Reliable services for better health.'
-    }
+      description: 'Reliable services focused on better patient care.',
+    },
   ];
 
-  // Services list (use icon class names or text icons)
   servicesList = [
     { name: 'Vaccination', icon: 'vaccines' },
     { name: 'Dental Care', icon: 'dentistry' },
     { name: 'Maternal Care', icon: 'child_care' },
     { name: 'STD Testing', icon: 'biotech' },
-    { name: 'Animal Bites', icon: 'pets' },
-    { name: 'Lab Tests', icon: 'science' },
-    { name: 'General Checkup', icon: 'medical_services' }
+    { name: 'Animal Bites / Anti-Rabies', icon: 'pets' },
+    { name: 'Laboratory Tests', icon: 'science' },
+    { name: 'General Checkup', icon: 'medical_services' },
   ];
-
 }

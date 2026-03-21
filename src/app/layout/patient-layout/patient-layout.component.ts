@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgFor } from '@angular/common';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-patient-layout',
@@ -10,6 +10,8 @@ import { NgFor } from '@angular/common';
   styleUrl: './patient-layout.component.css'
 })
 export class PatientLayoutComponent {
+  constructor(private router: Router) {}
+
   patientNavItems = [
     { label: 'Profile', path: '/patient/profile' },
     { label: 'Booking', path: '/patient/booking' },
@@ -20,6 +22,6 @@ export class PatientLayoutComponent {
   logout(): void {
     localStorage.removeItem('epila_token');
     localStorage.removeItem('epila_role');
-    window.location.href = '/login';
+    this.router.navigate(['/login']);
   }
 }
