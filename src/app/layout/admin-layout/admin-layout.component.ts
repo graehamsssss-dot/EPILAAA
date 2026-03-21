@@ -1,16 +1,20 @@
 import { Component } from '@angular/core';
 import { NgFor } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgFor],
+  imports: [NgFor, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
 export class AdminLayoutComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   adminNavItems = [
     { label: 'Dashboard', path: '/admin/dashboard' },
@@ -22,8 +26,7 @@ export class AdminLayoutComponent {
   ];
 
   logout(): void {
-    localStorage.removeItem('epila_token');
-    localStorage.removeItem('epila_role');
-    this.router.navigate(['/landing']);
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

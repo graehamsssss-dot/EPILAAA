@@ -7,64 +7,119 @@
     </div>
   </section>
 
-  <section class="content-grid">
+  <section class="charts-grid">
     <div class="panel">
       <div class="panel-header">
         <h3>Daily Patient Count</h3>
-        <span>Preview</span>
+        <span>Last 7 days</span>
       </div>
 
-      <div class="chart-placeholder">
-        <div class="bar" style="height: 45%"></div>
-        <div class="bar" style="height: 70%"></div>
-        <div class="bar" style="height: 55%"></div>
-        <div class="bar" style="height: 82%"></div>
-        <div class="bar" style="height: 60%"></div>
-        <div class="bar" style="height: 88%"></div>
-        <div class="bar" style="height: 66%"></div>
+      <div class="bar-chart">
+        <div class="bar-col" *ngFor="let value of dailyPatientCount; let i = index">
+          <div class="bar" [style.height]="getBarHeight(value, 100)"></div>
+          <small>D{{ i + 1 }}</small>
+        </div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-header">
-        <h3>Low Stock Overview</h3>
-        <span>Current</span>
+        <h3>Weekly Bookings</h3>
+        <span>Overview</span>
       </div>
 
-      <div class="stock-list">
-        <div class="stock-item" *ngFor="let item of lowStockItems">
-          <strong>{{ item.itemName }}</strong>
-          <span class="stock-badge">{{ item.stock }} left</span>
+      <div class="bar-chart">
+        <div class="bar-col" *ngFor="let value of weeklyBookings; let i = index">
+          <div class="bar secondary" [style.height]="getBarHeight(value, 40)"></div>
+          <small>W{{ i + 1 }}</small>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="panel table-panel">
-    <div class="panel-header">
-      <h3>Today Queue</h3>
-      <span>Live preview</span>
+  <section class="charts-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Service Usage</h3>
+        <span>Most used services</span>
+      </div>
+
+      <div class="progress-list">
+        <div class="progress-item" *ngFor="let item of serviceUsage">
+          <div class="progress-label-row">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="item.value"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Patient Name</th>
-            <th>Service</th>
-            <th>Time</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of todayQueue">
-            <td>{{ row.patientName }}</td>
-            <td>{{ row.service }}</td>
-            <td>{{ row.time }}</td>
-            <td><span [class]="getStatusClass(row.status)">{{ row.status }}</span></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Monthly Trends</h3>
+        <span>6-month trend</span>
+      </div>
+
+      <div class="line-preview">
+        <div class="line-node" *ngFor="let value of monthlyTrends">
+          <div class="node-dot"></div>
+          <span>{{ value }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bottom-grid">
+    <div class="panel table-panel">
+      <div class="panel-header">
+        <h3>Queue Preview</h3>
+        <span>Today</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Service</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of queuePreview">
+              <td>{{ row.patientName }}</td>
+              <td>{{ row.service }}</td>
+              <td>{{ row.time }}</td>
+              <td>
+                <span [class]="getStatusClass(row.status)">
+                  {{ row.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Low Stock Alerts</h3>
+        <span>Inventory warning</span>
+      </div>
+
+      <div class="alert-list">
+        <div class="alert-item" *ngFor="let item of inventoryAlerts">
+          <div>
+            <strong>{{ item.itemName }}</strong>
+            <p>{{ item.linkedService }}</p>
+          </div>
+          <span class="stock-alert">{{ item.stock }} left</span>
+        </div>
+      </div>
     </div>
   </section>
 </div>

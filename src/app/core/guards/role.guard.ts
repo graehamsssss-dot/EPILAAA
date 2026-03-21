@@ -1,27 +1,21 @@
-import { inject, PLATFORM_ID } from '@angular/core';
+import { inject } from '@angular/core';
 import { CanMatchFn, Router, UrlSegment } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { AuthService, UserRole } from '../services/auth.service';
 
-export function roleGuard(expectedRole: 'admin' | 'patient'): CanMatchFn {
+export function roleGuard(expectedRole: UserRole): CanMatchFn {
   return (_route, _segments: UrlSegment[]) => {
     const router = inject(Router);
-    const platformId = inject(PLATFORM_ID);
+    const auth = inject(AuthService);
 
-    if (!isPlatformBrowser(platformId)) {
+    if (auth.getRole() === expectedRole) {
       return true;
     }
 
-    const role = localStorage.getItem('epila_role');
-
-    if (role === expectedRole) {
-      return true;
-    }
-
-    if (role === 'admin') {
+    if (auth.isAdmin()) {
       return router.createUrlTree(['/admin/dashboard']);
     }
 
-    if (role === 'patient') {
+    if (auth.isPatient()) {
       return router.createUrlTree(['/patient/profile']);
     }
 

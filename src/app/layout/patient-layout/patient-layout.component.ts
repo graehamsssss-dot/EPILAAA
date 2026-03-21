@@ -1,16 +1,20 @@
 import { Component } from '@angular/core';
 import { NgFor } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-patient-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgFor],
+  imports: [NgFor, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './patient-layout.component.html',
   styleUrl: './patient-layout.component.css'
 })
 export class PatientLayoutComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   patientNavItems = [
     { label: 'Profile', path: '/patient/profile' },
@@ -20,8 +24,7 @@ export class PatientLayoutComponent {
   ];
 
   logout(): void {
-    localStorage.removeItem('epila_token');
-    localStorage.removeItem('epila_role');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

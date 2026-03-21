@@ -1,18 +1,12 @@
-import { inject, PLATFORM_ID } from '@angular/core';
+import { inject } from '@angular/core';
 import { CanMatchFn, Router } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanMatchFn = () => {
   const router = inject(Router);
-  const platformId = inject(PLATFORM_ID);
+  const auth = inject(AuthService);
 
-  if (!isPlatformBrowser(platformId)) {
-    return true;
-  }
-
-  const token = localStorage.getItem('epila_token');
-
-  if (token) {
+  if (auth.isLoggedIn()) {
     return true;
   }
 

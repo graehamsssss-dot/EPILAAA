@@ -36,14 +36,14 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.brand h2 {
+.brand-text h2 {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: #ffffff;
 }
 
-.brand p {
+.brand-text p {
   margin: 2px 0 0;
   font-size: 0.85rem;
   color: #cbd5e1;

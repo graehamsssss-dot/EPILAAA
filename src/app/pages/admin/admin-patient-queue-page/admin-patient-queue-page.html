@@ -1,38 +1,99 @@
-<div class="page">
-  <div class="panel">
-    <div class="top-row">
+<div class="queue-page">
+  <section class="panel">
+    <div class="panel-header panel-header-row">
       <div>
         <h2>Patient Queue</h2>
-        <p>Manage daily queue and service progress</p>
+        <p>Manage scheduled patients and queue activity</p>
       </div>
-      <input [(ngModel)]="search" type="text" placeholder="Search patient, service, status">
+
+      <div class="refresh-box">
+        <span>Last updated: {{ lastUpdated }}</span>
+        <button class="refresh-btn" type="button" (click)="refreshQueue()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="filter-grid">
+      <div class="field">
+        <label>Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search patient, service, or status"
+        />
+      </div>
+
+      <div class="field">
+        <label>Service</label>
+        <select [(ngModel)]="selectedService">
+          <option *ngFor="let service of serviceOptions" [value]="service">
+            {{ service }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Date</label>
+        <input type="date" [(ngModel)]="selectedDate" />
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Queue List</h3>
+      <p>{{ filteredQueue.length }} patient(s) found</p>
     </div>
 
     <div class="table-wrapper">
       <table>
         <thead>
           <tr>
-            <th>Patient</th>
+            <th>Patient Name</th>
             <th>Scheduled Time</th>
             <th>Service</th>
+            <th>Date</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let row of filteredQueue; let i = index">
-            <td>{{ row.patientName }}</td>
-            <td>{{ row.time }}</td>
-            <td>{{ row.service }}</td>
-            <td><span [class]="getStatusClass(row.status)">{{ row.status }}</span></td>
-            <td class="action-cell">
-              <button (click)="setStatus(i, 'In Progress')">Start</button>
-              <button (click)="setStatus(i, 'Completed')">Complete</button>
-              <button (click)="setStatus(i, 'Cancelled')">Cancel</button>
+          <tr *ngFor="let item of filteredQueue">
+            <td>{{ item.patientName }}</td>
+            <td>{{ item.scheduledTime }}</td>
+            <td>{{ item.service }}</td>
+            <td>{{ item.date }}</td>
+            <td>
+              <span [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
             </td>
+            <td>
+              <div class="action-buttons">
+                <button class="table-btn call" type="button" (click)="callPatient(item)">
+                  Call
+                </button>
+                <button class="table-btn progress" type="button" (click)="markInProgress(item)">
+                  In Progress
+                </button>
+                <button class="table-btn complete" type="button" (click)="complete(item)">
+                  Complete
+                </button>
+                <button class="table-btn skip" type="button" (click)="skip(item)">
+                  Skip
+                </button>
+                <button class="table-btn cancel" type="button" (click)="cancel(item)">
+                  Cancel
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredQueue.length === 0">
+            <td colspan="6" class="empty-state">No queue items found.</td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>

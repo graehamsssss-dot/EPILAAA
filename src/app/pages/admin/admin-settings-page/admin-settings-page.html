@@ -1,21 +1,174 @@
-<div class="page">
-  <div class="panel">
-    <h2>Admin Settings</h2>
-    <div class="form-grid">
-      <input [(ngModel)]="profile.fullName" type="text" placeholder="Full Name">
-      <input [(ngModel)]="profile.email" type="email" placeholder="Email">
+<div class="settings-page">
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Admin Settings</h2>
+      <p>Manage your profile, privacy, notifications, and system preferences</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Profile</h3>
+      <p>Update your admin account details</p>
     </div>
 
-    <label class="toggle">
-      <input [(ngModel)]="profile.notifications" type="checkbox">
-      <span>Enable notifications</span>
-    </label>
+    <div class="form-grid">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" [(ngModel)]="profile.fullName" />
+      </div>
 
-    <label class="toggle">
-      <input [(ngModel)]="profile.privacyMode" type="checkbox">
-      <span>Enable privacy mode</span>
-    </label>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="profile.email" />
+      </div>
 
-    <button class="primary-btn" type="button">Save Settings</button>
-  </div>
+      <div class="field">
+        <label>Contact Number</label>
+        <input type="text" [(ngModel)]="profile.contactNumber" />
+      </div>
+
+      <div class="field">
+        <label>Role</label>
+        <input type="text" [(ngModel)]="profile.role" readonly />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="saveProfile()">Save Profile</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Password Change</h3>
+      <p>Update your account password</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>Current Password</label>
+        <input type="password" [(ngModel)]="passwordForm.currentPassword" />
+      </div>
+
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" [(ngModel)]="passwordForm.newPassword" />
+      </div>
+
+      <div class="field full-width">
+        <label>Confirm New Password</label>
+        <input type="password" [(ngModel)]="passwordForm.confirmPassword" />
+      </div>
+    </div>
+
+    <div class="message" *ngIf="passwordMessage">
+      {{ passwordMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="savePassword()">Update Password</button>
+    </div>
+  </section>
+
+  <section class="settings-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Privacy Settings</h3>
+        <p>Control privacy and visibility options</p>
+      </div>
+
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span>Profile Visibility</span>
+          <input type="checkbox" [(ngModel)]="privacy.profileVisibility" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Show Audit Logs</span>
+          <input type="checkbox" [(ngModel)]="privacy.auditLogsVisible" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Session Alerts</span>
+          <input type="checkbox" [(ngModel)]="privacy.sessionAlerts" />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="primary-btn" type="button" (click)="savePrivacy()">Save Privacy</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Notification Preferences</h3>
+        <p>Choose what notifications you want to receive</p>
+      </div>
+
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span>Email Notifications</span>
+          <input type="checkbox" [(ngModel)]="notifications.emailNotifications" />
+        </label>
+
+        <label class="toggle-item">
+          <span>SMS Notifications</span>
+          <input type="checkbox" [(ngModel)]="notifications.smsNotifications" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Queue Alerts</span>
+          <input type="checkbox" [(ngModel)]="notifications.queueAlerts" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Low Stock Alerts</span>
+          <input type="checkbox" [(ngModel)]="notifications.lowStockAlerts" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Monthly Report Notifications</span>
+          <input type="checkbox" [(ngModel)]="notifications.monthlyReports" />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="primary-btn" type="button" (click)="saveNotifications()">Save Notifications</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>System Settings</h3>
+      <p>Configure core system behavior</p>
+    </div>
+
+    <div class="toggle-list">
+      <label class="toggle-item">
+        <span>Enable Booking</span>
+        <input type="checkbox" [(ngModel)]="system.bookingEnabled" />
+      </label>
+
+      <label class="toggle-item">
+        <span>Allow Patient Cancellation</span>
+        <input type="checkbox" [(ngModel)]="system.allowPatientCancellation" />
+      </label>
+
+      <label class="toggle-item">
+        <span>Queue Auto Refresh</span>
+        <input type="checkbox" [(ngModel)]="system.queueAutoRefresh" />
+      </label>
+
+      <label class="toggle-item">
+        <span>Inventory Auto Deduction</span>
+        <input type="checkbox" [(ngModel)]="system.inventoryAutoDeduction" />
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="saveSystemSettings()">Save System Settings</button>
+    </div>
+  </section>
 </div>

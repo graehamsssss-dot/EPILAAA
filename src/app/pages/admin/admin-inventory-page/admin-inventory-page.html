@@ -1,16 +1,100 @@
-<div class="page">
-  <div class="panel">
-    <h2>Inventory Management</h2>
-    <div class="form-grid">
-      <input [(ngModel)]="itemName" type="text" placeholder="Item Name">
-      <input [(ngModel)]="linkedService" type="text" placeholder="Linked Service">
-      <input [(ngModel)]="currentStock" type="number" placeholder="Current Stock">
+<div class="inventory-page">
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>Inventory Management</h2>
+        <p>Manage medical supplies, stock levels, and linked service items</p>
+      </div>
     </div>
-    <button class="primary-btn" (click)="addItem()">Add Item</button>
-  </div>
 
-  <div class="panel">
-    <h3>Inventory Items</h3>
+    <div class="form-grid">
+      <div class="field">
+        <label>Item Name</label>
+        <input type="text" [(ngModel)]="form.itemName" placeholder="Enter item name" />
+      </div>
+
+      <div class="field">
+        <label>Linked Service</label>
+        <select [(ngModel)]="form.linkedService">
+          <option *ngFor="let service of serviceOptions" [value]="service">
+            {{ service }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Current Stock</label>
+        <input type="number" [(ngModel)]="form.currentStock" placeholder="Enter stock" />
+      </div>
+
+      <div class="field">
+        <label>Low Stock Threshold</label>
+        <input type="number" [(ngModel)]="form.lowStockThreshold" placeholder="Enter threshold" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="saveItem()">
+        {{ editMode ? 'Update Item' : 'Add Item' }}
+      </button>
+
+      <button class="secondary-btn" type="button" (click)="resetForm()" *ngIf="editMode">
+        Cancel Edit
+      </button>
+    </div>
+  </section>
+
+  <section class="alert-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Low Stock Alerts</h3>
+        <p>{{ lowStockItems.length }} item(s) need attention</p>
+      </div>
+
+      <div class="alert-list">
+        <div class="alert-item" *ngFor="let item of lowStockItems">
+          <div>
+            <strong>{{ item.itemName }}</strong>
+            <p>{{ item.linkedService }}</p>
+          </div>
+          <span class="low-alert">{{ item.currentStock }} left</span>
+        </div>
+
+        <div class="empty-state" *ngIf="lowStockItems.length === 0">
+          No low stock alerts.
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Quick Restock</h3>
+        <p>Default restock quantity for item actions</p>
+      </div>
+
+      <div class="field">
+        <label>Restock Amount</label>
+        <input type="number" [(ngModel)]="restockAmount" />
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header panel-header-row">
+      <div>
+        <h3>Inventory Items</h3>
+        <p>Track stock, service links, and item status</p>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search item, service, or status"
+        />
+      </div>
+    </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
@@ -18,22 +102,74 @@
             <th>Item Name</th>
             <th>Linked Service</th>
             <th>Current Stock</th>
+            <th>Threshold</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let item of items">
-            <td>{{ item.name }}</td>
+          <tr *ngFor="let item of filteredItems">
+            <td>{{ item.itemName }}</td>
             <td>{{ item.linkedService }}</td>
-            <td>{{ item.stock }}</td>
+            <td>{{ item.currentStock }}</td>
+            <td>{{ item.lowStockThreshold }}</td>
             <td>
-              <span class="badge" [class.low]="item.status === 'Low Stock'">{{ item.status }}</span>
+              <span [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
             </td>
-            <td><button class="secondary-btn" (click)="restock(item)">Restock +10</button></td>
+            <td>
+              <div class="action-buttons">
+                <button class="table-btn edit" type="button" (click)="editItem(item)">Edit</button>
+                <button class="table-btn restock" type="button" (click)="restockItem(item)" [disabled]="item.status === 'Archived'">
+                  Restock
+                </button>
+                <button class="table-btn archive" type="button" (click)="archiveItem(item)" [disabled]="item.status === 'Archived'">
+                  Archive
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredItems.length === 0">
+            <td colspan="6" class="empty-state">No inventory items found.</td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Inventory Logs / History</h3>
+      <p>Recent stock activity</p>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Action</th>
+            <th>Quantity</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td>{{ log.itemName }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.quantity }}</td>
+            <td>{{ log.date }}</td>
+          </tr>
+
+          <tr *ngIf="logs.length === 0">
+            <td colspan="4" class="empty-state">No inventory logs found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

@@ -1,35 +1,95 @@
-<div class="page">
-  <div class="panel">
+<div class="service-page">
+  <section class="panel">
     <div class="panel-header">
-      <h2>Service Schedule</h2>
-      <span>Add and manage clinic services</span>
+      <div>
+        <h2>Service Schedule</h2>
+        <p>Create and manage clinic services and booking availability</p>
+      </div>
     </div>
 
     <div class="form-grid">
-      <input [(ngModel)]="form.name" type="text" placeholder="Service name">
-      <select [(ngModel)]="form.category">
-        <option>vaccination</option>
-        <option>dental care</option>
-        <option>maternal</option>
-        <option>std test</option>
-        <option>animal related / anti-rabies</option>
-        <option>laboratory tests</option>
-        <option>general check up</option>
-        <option>other</option>
-      </select>
-      <input [(ngModel)]="form.days" type="text" placeholder="Available days">
-      <input [(ngModel)]="form.startTime" type="time">
-      <input [(ngModel)]="form.endTime" type="time">
-      <input [(ngModel)]="form.slots" type="number" placeholder="Slot limit">
-      <textarea [(ngModel)]="form.description" placeholder="Description"></textarea>
+      <div class="field">
+        <label>Service Name</label>
+        <input type="text" [(ngModel)]="form.serviceName" placeholder="Enter service name" />
+      </div>
+
+      <div class="field">
+        <label>Category</label>
+        <select [(ngModel)]="form.category">
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field full-width">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" rows="3" placeholder="Enter service description"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Available Days</label>
+        <input type="text" [(ngModel)]="form.availableDays" placeholder="e.g. Mon, Wed, Fri" />
+      </div>
+
+      <div class="field">
+        <label>Slot Limit</label>
+        <input type="number" [(ngModel)]="form.slotLimit" placeholder="Enter slot limit" />
+      </div>
+
+      <div class="field">
+        <label>Start Time</label>
+        <input type="time" [(ngModel)]="form.startTime" />
+      </div>
+
+      <div class="field">
+        <label>End Time</label>
+        <input type="time" [(ngModel)]="form.endTime" />
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <select [(ngModel)]="form.status">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="field full-width">
+        <label>Linked Inventory Items</label>
+        <input
+          type="text"
+          [(ngModel)]="form.linkedInventoryItems"
+          placeholder="e.g. Syringe, Cotton, Gloves"
+        />
+      </div>
     </div>
 
-    <button class="primary-btn" type="button" (click)="addService()">Add Service</button>
-  </div>
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="saveService()">
+        {{ editMode ? 'Update Service' : 'Add Service' }}
+      </button>
 
-  <div class="panel">
-    <div class="panel-header">
-      <h3>Available Services</h3>
+      <button class="secondary-btn" type="button" (click)="resetForm()" *ngIf="editMode">
+        Cancel Edit
+      </button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header panel-header-row">
+      <div>
+        <h3>Service List</h3>
+        <p>Manage service schedules and booking status</p>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search service, category, or status"
+        />
+      </div>
     </div>
 
     <div class="table-wrapper">
@@ -42,28 +102,45 @@
             <th>Time</th>
             <th>Slots</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Linked Inventory</th>
+            <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let item of services">
+          <tr *ngFor="let item of filteredServices">
             <td>
-              <strong>{{ item.name }}</strong>
-              <div class="muted">{{ item.description }}</div>
+              <strong>{{ item.serviceName }}</strong>
+              <div class="muted-text">{{ item.description }}</div>
             </td>
             <td>{{ item.category }}</td>
-            <td>{{ item.days }}</td>
-            <td>{{ item.time }}</td>
-            <td>{{ item.slots }}</td>
+            <td>{{ item.availableDays }}</td>
+            <td>{{ item.startTime }} - {{ item.endTime }}</td>
+            <td>{{ item.slotLimit }}</td>
             <td>
-              <span class="badge" [class.inactive]="item.status === 'Inactive'">{{ item.status }}</span>
+              <span [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
             </td>
+            <td>{{ item.linkedInventoryItems }}</td>
             <td>
-              <button class="secondary-btn" type="button" (click)="toggleStatus(item)">Toggle</button>
+              <div class="action-buttons">
+                <button class="table-btn edit" type="button" (click)="editService(item)">Edit</button>
+                <button class="table-btn toggle" type="button" (click)="toggleStatus(item)">
+                  {{ item.status === 'Active' ? 'Deactivate' : 'Activate' }}
+                </button>
+                <button class="table-btn remove" type="button" (click)="removeService(item.id)">Remove</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredServices.length === 0">
+            <td colspan="8" class="empty-state">
+              No services found.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>
