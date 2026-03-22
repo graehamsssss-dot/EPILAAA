@@ -1,21 +1,130 @@
-<div class="panel">
-  <h2>Service History</h2>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Service</th>
-          <th>Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of history">
-          <td>{{ item.service }}</td>
-          <td>{{ item.date }}</td>
-          <td><span class="badge">{{ item.status }}</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="history-page">
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Patient History</h2>
+      <p>Review your bookings, completed services, queue history, and health records</p>
+    </div>
+
+    <div class="filter-row">
+      <div class="field search-field">
+        <label>Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search service, staff, date, status, or queue number"
+        />
+      </div>
+
+      <div class="field filter-field">
+        <label>Section</label>
+        <select [(ngModel)]="selectedSection">
+          <option *ngFor="let option of sectionOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" *ngIf="showSection('booking')">
+    <div class="panel-header">
+      <h3>Booking History</h3>
+      <p>{{ filteredBookingHistory.length }} record(s)</p>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Booking Date</th>
+            <th>Booking Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of filteredBookingHistory">
+            <td>{{ item.serviceName }}</td>
+            <td>{{ item.bookingDate }}</td>
+            <td>{{ item.bookingTime }}</td>
+            <td>
+              <span [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredBookingHistory.length === 0">
+            <td colspan="4" class="empty-state">No booking history found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" *ngIf="showSection('completed')">
+    <div class="panel-header">
+      <h3>Completed Services</h3>
+      <p>{{ filteredCompletedServices.length }} record(s)</p>
+    </div>
+
+    <div class="record-list" *ngIf="filteredCompletedServices.length > 0; else noCompleted">
+      <div class="record-card" *ngFor="let item of filteredCompletedServices">
+        <div class="record-top">
+          <div>
+            <h4>{{ item.serviceName }}</h4>
+            <p>{{ item.consultationDate }}</p>
+          </div>
+          <span class="status completed">Completed</span>
+        </div>
+
+        <div class="record-details">
+          <div><strong>Attending Staff:</strong> {{ item.attendingStaff }}</div>
+          <div><strong>Remarks:</strong> {{ item.remarks }}</div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noCompleted>
+      <div class="empty-box">No completed service records found.</div>
+    </ng-template>
+  </section>
+
+  <section class="panel" *ngIf="showSection('queue')">
+    <div class="panel-header">
+      <h3>Queue History</h3>
+      <p>{{ filteredQueueHistory.length }} record(s)</p>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Queue Date</th>
+            <th>Queue Number</th>
+            <th>Service</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of filteredQueueHistory">
+            <td>{{ item.queueDate }}</td>
+            <td>{{ item.queueNumber }}</td>
+            <td>{{ item.serviceName }}</td>
+            <td>
+              <span [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredQueueHistory.length === 0">
+            <td colspan="4" class="empty-state">No queue history found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

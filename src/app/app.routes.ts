@@ -25,7 +25,6 @@ export const routes: Routes = [
     component: SignupPage,
     title: 'ePILA | Sign Up'
   },
-
   {
     path: 'admin',
     canMatch: [authGuard, roleGuard('admin')],
@@ -89,7 +88,6 @@ export const routes: Routes = [
       }
     ]
   },
-
   {
     path: 'patient',
     canMatch: [authGuard, roleGuard('patient')],
@@ -137,7 +135,6 @@ export const routes: Routes = [
       }
     ]
   },
-
   {
     path: '**',
     redirectTo: ''

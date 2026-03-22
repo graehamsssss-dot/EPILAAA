@@ -1,20 +1,140 @@
-<div class="page">
-  <div class="profile-grid">
-    <div class="panel qr-panel">
-      <h2>{{ patient.fullName }}</h2>
-      <p class="muted">Patient ID: {{ patient.patientId }}</p>
-      <img [src]="patient.qrCodeUrl" alt="QR Code">
+<div class="profile-page">
+  <section class="profile-grid">
+    <div class="panel identity-panel">
+      <div class="identity-top">
+        <img [src]="patient.qrCodeUrl" alt="Patient QR Code" class="qr-image" />
+      </div>
+
+      <h2>{{ fullName }}</h2>
+      <p class="patient-id">Patient ID: {{ patient.patientId }}</p>
+
+      <div class="identity-badges">
+        <span class="badge">{{ patient.sex }}</span>
+        <span class="badge">{{ patient.bloodType }}</span>
+        <span class="badge">{{ patient.civilStatus }}</span>
+      </div>
     </div>
 
     <div class="panel">
-      <h3>Personal Information</h3>
+      <div class="panel-header">
+        <h3>Personal Information</h3>
+        <p>Registered patient details</p>
+      </div>
+
       <div class="info-grid">
-        <div><strong>Age</strong><span>{{ patient.age }}</span></div>
-        <div><strong>Sex</strong><span>{{ patient.sex }}</span></div>
-        <div><strong>Contact</strong><span>{{ patient.contactNumber }}</span></div>
-        <div><strong>Barangay</strong><span>{{ patient.barangay }}</span></div>
-        <div><strong>Blood Type</strong><span>{{ patient.bloodType }}</span></div>
+        <div class="info-item">
+          <span>First Name</span>
+          <strong>{{ patient.firstName }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Middle Name</span>
+          <strong>{{ patient.middleName || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Last Name</span>
+          <strong>{{ patient.lastName }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Suffix</span>
+          <strong>{{ patient.suffix || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Date of Birth</span>
+          <strong>{{ patient.birthDate }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Age</span>
+          <strong>{{ patient.age }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Sex</span>
+          <strong>{{ patient.sex }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Civil Status</span>
+          <strong>{{ patient.civilStatus }}</strong>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <section class="details-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Contact & Address</h3>
+        <p>Current patient contact information</p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <span>Contact Number</span>
+          <strong>{{ patient.contactNumber }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Email</span>
+          <strong>{{ patient.email || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Barangay</span>
+          <strong>{{ patient.barangay }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Purok / Zone</span>
+          <strong>{{ patient.purok || '—' }}</strong>
+        </div>
+        <div class="info-item full-width">
+          <span>Complete Address</span>
+          <strong>{{ patient.address || '—' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Emergency Contact</h3>
+        <p>Emergency contact information</p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <span>Contact Name</span>
+          <strong>{{ patient.emergencyContactName }}</strong>
+        </div>
+        <div class="info-item">
+          <span>Contact Number</span>
+          <strong>{{ patient.emergencyContactNumber }}</strong>
+        </div>
+        <div class="info-item full-width">
+          <span>Relationship</span>
+          <strong>{{ patient.emergencyRelationship || '—' }}</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Medical Information</h3>
+      <p>Saved healthcare-related details</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <span>PhilHealth ID</span>
+        <strong>{{ patient.philhealthId || '—' }}</strong>
+      </div>
+      <div class="info-item">
+        <span>Blood Type</span>
+        <strong>{{ patient.bloodType || '—' }}</strong>
+      </div>
+      <div class="info-item full-width">
+        <span>Known Allergies</span>
+        <strong>{{ patient.allergies || 'None reported' }}</strong>
+      </div>
+      <div class="info-item full-width">
+        <span>Existing Conditions</span>
+        <strong>{{ patient.existingConditions || 'None reported' }}</strong>
+      </div>
+    </div>
+  </section>
 </div>

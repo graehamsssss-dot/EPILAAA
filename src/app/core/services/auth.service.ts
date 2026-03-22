@@ -29,10 +29,7 @@ export class AuthService {
 
   getRole(): UserRole | null {
     const role = this.storage.getItem(this.roleKey);
-    if (role === 'admin' || role === 'patient') {
-      return role;
-    }
-    return null;
+    return role === 'admin' || role === 'patient' ? role : null;
   }
 
   isLoggedIn(): boolean {

@@ -1,4 +1,12 @@
-:host { display: block; }
+:host {
+  display: block;
+}
+
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
 .profile-grid {
   display: grid;
@@ -6,27 +14,79 @@
   gap: 24px;
 }
 
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
 .panel {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 18px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
-.qr-panel {
+.identity-panel {
   text-align: center;
 }
 
-.qr-panel img {
-  margin-top: 16px;
-  width: 180px;
-  height: 180px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+.identity-top {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 
-.muted {
+.qr-image {
+  width: 220px;
+  height: 220px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.identity-panel h2 {
+  margin: 0;
+  color: #111827;
+}
+
+.patient-id {
+  margin: 8px 0 0;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.identity-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-header h3 {
+  margin: 0 0 6px;
+  color: #111827;
+}
+
+.panel-header p {
+  margin: 0;
   color: #6b7280;
 }
 
@@ -36,8 +96,9 @@
   gap: 16px;
 }
 
-.info-grid div {
+.info-item {
   background: #f8fafc;
+  border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 14px;
   display: flex;
@@ -45,12 +106,39 @@
   gap: 8px;
 }
 
-@media (max-width: 900px) {
-  .profile-grid {
+.info-item span {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.info-item strong {
+  color: #111827;
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .profile-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .info-grid {
     grid-template-columns: 1fr;
   }
 
-  .info-grid {
-    grid-template-columns: 1fr;
+  .full-width {
+    grid-column: auto;
+  }
+
+  .qr-image {
+    width: 180px;
+    height: 180px;
   }
 }

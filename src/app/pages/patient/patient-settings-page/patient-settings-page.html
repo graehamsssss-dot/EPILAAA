@@ -1,20 +1,109 @@
-<div class="panel">
-  <h2>Patient Settings</h2>
+<div class="settings-page">
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Patient Settings</h2>
+      <p>Manage your privacy, password, and account preferences</p>
+    </div>
+  </section>
 
-  <div class="field">
-    <label>Email Address</label>
-    <input [(ngModel)]="settings.email" type="email">
-  </div>
+  <section class="settings-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Privacy Settings</h3>
+        <p>Control what information is visible and how the clinic can contact you</p>
+      </div>
 
-  <label class="toggle">
-    <input [(ngModel)]="settings.notifications" type="checkbox">
-    <span>Enable notifications</span>
-  </label>
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span>Profile Visibility</span>
+          <input type="checkbox" [(ngModel)]="privacy.profileVisibility" />
+        </label>
 
-  <label class="toggle">
-    <input [(ngModel)]="settings.privacy" type="checkbox">
-    <span>Enable privacy mode</span>
-  </label>
+        <label class="toggle-item">
+          <span>Show Medical Information</span>
+          <input type="checkbox" [(ngModel)]="privacy.showMedicalInfo" />
+        </label>
 
-  <button class="primary-btn" type="button">Save Settings</button>
+        <label class="toggle-item">
+          <span>Allow Contact Notifications</span>
+          <input type="checkbox" [(ngModel)]="privacy.allowContactNotifications" />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="primary-btn" type="button" (click)="savePrivacy()">Save Privacy Settings</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Account Preferences</h3>
+        <p>Choose your preferred experience inside the portal</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="field full-width">
+          <label>Preferred Language</label>
+          <select [(ngModel)]="preferences.preferredLanguage">
+            <option *ngFor="let language of languageOptions" [value]="language">
+              {{ language }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span>Dark Mode</span>
+          <input type="checkbox" [(ngModel)]="preferences.darkMode" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Appointment Reminders</span>
+          <input type="checkbox" [(ngModel)]="preferences.receiveAppointmentReminders" />
+        </label>
+
+        <label class="toggle-item">
+          <span>Queue Updates</span>
+          <input type="checkbox" [(ngModel)]="preferences.receiveQueueUpdates" />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="primary-btn" type="button" (click)="savePreferences()">Save Preferences</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Password Update</h3>
+      <p>Change your account password securely</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>Current Password</label>
+        <input type="password" [(ngModel)]="passwordForm.currentPassword" />
+      </div>
+
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" [(ngModel)]="passwordForm.newPassword" />
+      </div>
+
+      <div class="field full-width">
+        <label>Confirm New Password</label>
+        <input type="password" [(ngModel)]="passwordForm.confirmPassword" />
+      </div>
+    </div>
+
+    <div class="message" *ngIf="passwordMessage">
+      {{ passwordMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button class="primary-btn" type="button" (click)="updatePassword()">Update Password</button>
+    </div>
+  </section>
 </div>

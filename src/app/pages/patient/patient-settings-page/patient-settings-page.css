@@ -1,32 +1,103 @@
-:host { display: block; }
+:host {
+  display: block;
+}
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
 .panel {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 18px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  max-width: 700px;
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-header h2,
+.panel-header h3 {
+  margin: 0 0 6px;
+  color: #111827;
+}
+
+.panel-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: 18px 0;
 }
 
-input[type="email"] {
-  padding: 12px 14px;
-  border-radius: 12px;
+.field label {
+  font-weight: 600;
+  color: #111827;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 12px 2px;
   border: 1px solid #d1d5db;
+  border-radius: 14px;
+  outline: none;
+  transition: 0.2s ease;
 }
 
-.toggle {
+.field input:focus,
+.field select:focus {
+  border-color: #14213d;
+  box-shadow: 0 0 0 3px rgba(20, 33, 61, 0.1);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.toggle-list {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #111827;
+}
+
+.toggle-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  margin-top: 18px;
 }
 
 .primary-btn {
@@ -34,7 +105,32 @@ input[type="email"] {
   border-radius: 12px;
   padding: 12px 16px;
   background: #14213d;
-  color: #fff;
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.message {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+@media (max-width: 1000px) {
+  .settings-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
 }

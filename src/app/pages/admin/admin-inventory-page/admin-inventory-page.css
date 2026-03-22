@@ -64,7 +64,7 @@
 .field input,
 .field select {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 2px;
   border: 1px solid #d1d5db;
   border-radius: 14px;
   outline: none;
