@@ -157,7 +157,7 @@
 }
 
 .demo-note p {
-  margin: 6px 0;
+  margin: 0 auto;
 }
 
 @media (max-width: 600px) {

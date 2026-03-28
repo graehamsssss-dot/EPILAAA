@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ApiAuthService } from '../../../core/services/api-auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -16,10 +17,12 @@ export class LoginPage {
   password = '';
   acceptedTerms = false;
   errorMessage = '';
+  isLoading = false;
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private apiAuthService: ApiAuthService
   ) {}
 
   goToHome(): void {
@@ -39,13 +42,37 @@ export class LoginPage {
       return;
     }
 
-    if (this.email.toLowerCase().includes('admin')) {
-      this.authService.loginAs('admin');
-      this.router.navigateByUrl('/admin/dashboard');
-      return;
-    }
+    this.isLoading = true;
 
-    this.authService.loginAs('patient');
-    this.router.navigateByUrl('/patient/profile');
+    this.apiAuthService.login({
+      email: this.email.trim(),
+      password: this.password
+    }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        const token = response?.data?.token;
+        const role = response?.data?.role;
+
+        if (!token || !role) {
+          this.errorMessage = 'Invalid server response.';
+          return;
+        }
+
+        this.authService.login(token, role);
+
+        if (role === 'admin') {
+          this.router.navigateByUrl('/admin/dashboard');
+        } else {
+          this.router.navigateByUrl('/patient/profile');
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage =
+          error?.error?.message ||
+          'Login failed. Please check your credentials.';
+      }
+    });
   }
 }

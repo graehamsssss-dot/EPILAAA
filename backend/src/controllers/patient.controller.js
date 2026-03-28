@@ -43,10 +43,20 @@ export const updatePatientProfile = async (req, res, next) => {
 
     await pool.query(
       `UPDATE patients
-       SET contact_number = ?, email = ?, barangay = ?, purok = ?, address = ?,
-           emergency_contact_name = ?, emergency_contact_number = ?, emergency_relationship = ?,
-           philhealth_id = ?, blood_type = ?, allergies = ?, existing_conditions = ?,
-           updated_at = CURRENT_TIMESTAMP
+       SET
+         contact_number = ?,
+         email = ?,
+         barangay = ?,
+         purok = ?,
+         address = ?,
+         emergency_contact_name = ?,
+         emergency_contact_number = ?,
+         emergency_relationship = ?,
+         philhealth_id = ?,
+         blood_type = ?,
+         allergies = ?,
+         existing_conditions = ?,
+         updated_at = CURRENT_TIMESTAMP
        WHERE user_id = ?`,
       [
         contactNumber,

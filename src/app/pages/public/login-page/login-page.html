@@ -51,16 +51,16 @@
           {{ errorMessage }}
         </div>
 
-        <button type="submit" class="btn-primary">Login</button>
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Logging in...' : 'Login' }}
+        </button>
 
         <div class="helper-links">
           <a routerLink="/signup">Create account</a>
         </div>
 
         <div class="demo-note">
-          <p><strong>Demo login:</strong></p>
-          <p>Use an email with <strong>admin</strong> to open the Admin Portal.</p>
-          <p>Use any other email to open the Patient Portal.</p>
+          <p>Use a registered account to log in.</p>
         </div>
       </form>
     </div>

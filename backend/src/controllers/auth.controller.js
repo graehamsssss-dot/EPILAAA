@@ -29,7 +29,17 @@ export const registerPatient = async (req, res, next) => {
       password
     } = req.body;
 
-    if (!firstName || !lastName || !birthDate || !sex || !contactNumber || !barangay || !emergencyContactName || !emergencyContactNumber || !password) {
+    if (
+      !firstName ||
+      !lastName ||
+      !birthDate ||
+      !sex ||
+      !contactNumber ||
+      !barangay ||
+      !emergencyContactName ||
+      !emergencyContactNumber ||
+      !password
+    ) {
       return errorResponse(res, 'Missing required fields', 400);
     }
 
@@ -44,6 +54,7 @@ export const registerPatient = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const patientId = `EPILA-${Date.now()}`;
+    const qrCode = patientId;
 
     const connection = await pool.getConnection();
 
@@ -51,24 +62,43 @@ export const registerPatient = async (req, res, next) => {
       await connection.beginTransaction();
 
       const [userResult] = await connection.query(
-        `INSERT INTO users (email, password_hash, role)
-         VALUES (?, ?, ?)`,
-        [email || null, hashedPassword, 'patient']
+        `INSERT INTO users (email, password_hash, role, is_active)
+         VALUES (?, ?, ?, ?)`,
+        [email || null, hashedPassword, 'patient', 1]
       );
 
       const userId = userResult.insertId;
 
       await connection.query(
         `INSERT INTO patients (
-          user_id, patient_id, first_name, middle_name, last_name, suffix,
-          birth_date, age, sex, civil_status, contact_number, email,
-          barangay, purok, address, emergency_contact_name,
-          emergency_contact_number, emergency_relationship, philhealth_id,
-          blood_type, allergies, existing_conditions, qr_code
+          user_id,
+          patient_id,
+          qr_code,
+          first_name,
+          middle_name,
+          last_name,
+          suffix,
+          birth_date,
+          age,
+          sex,
+          civil_status,
+          contact_number,
+          email,
+          barangay,
+          purok,
+          address,
+          emergency_contact_name,
+          emergency_contact_number,
+          emergency_relationship,
+          philhealth_id,
+          blood_type,
+          allergies,
+          existing_conditions
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           patientId,
+          qrCode,
           firstName,
           middleName || null,
           lastName,
@@ -88,8 +118,7 @@ export const registerPatient = async (req, res, next) => {
           philhealthId || null,
           bloodType || null,
           allergies || null,
-          existingConditions || null,
-          patientId
+          existingConditions || null
         ]
       );
 
@@ -107,7 +136,8 @@ export const registerPatient = async (req, res, next) => {
         {
           token,
           role: 'patient',
-          patientId
+          patientId,
+          qrCode
         },
         201
       );
@@ -131,7 +161,13 @@ export const login = async (req, res, next) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT u.id, u.email, u.password_hash, u.role, p.patient_id
+      `SELECT
+         u.id,
+         u.email,
+         u.password_hash,
+         u.role,
+         u.is_active,
+         p.patient_id
        FROM users u
        LEFT JOIN patients p ON p.user_id = u.id
        WHERE u.email = ?
@@ -144,6 +180,11 @@ export const login = async (req, res, next) => {
     }
 
     const user = rows[0];
+
+    if (!user.is_active) {
+      return errorResponse(res, 'Account is inactive', 403);
+    }
+
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {

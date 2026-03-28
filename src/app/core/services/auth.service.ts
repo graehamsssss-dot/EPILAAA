@@ -12,10 +12,14 @@ export class AuthService {
 
   constructor(private storage: StorageService) {}
 
-  loginAs(role: UserRole): void {
-    const token = role === 'admin' ? 'demo-admin-token' : 'demo-patient-token';
+  login(token: string, role: UserRole): void {
     this.storage.setItem(this.tokenKey, token);
     this.storage.setItem(this.roleKey, role);
+  }
+
+  loginAs(role: UserRole): void {
+    const token = role === 'admin' ? 'demo-admin-token' : 'demo-patient-token';
+    this.login(token, role);
   }
 
   logout(): void {

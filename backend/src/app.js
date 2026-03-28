@@ -5,9 +5,12 @@ import { env } from './config/env.js';
 import authRoutes from './routes/auth.routes.js';
 import patientRoutes from './routes/patient.routes.js';
 import serviceRoutes from './routes/service.routes.js';
+import bookingRoutes from './routes/booking.routes.js';
 import queueRoutes from './routes/queue.routes.js';
 import inventoryRoutes from './routes/inventory.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import reportRoutes from './routes/report.routes.js';
+import settingsRoutes from './routes/settings.routes.js';
 
 import { globalErrorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -32,9 +35,12 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
