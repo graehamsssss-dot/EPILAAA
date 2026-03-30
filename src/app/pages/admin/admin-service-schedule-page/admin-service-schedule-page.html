@@ -1,10 +1,16 @@
 <div class="service-page">
   <section class="panel">
     <div class="panel-header">
-      <div>
-        <h2>Service Schedule</h2>
-        <p>Create and manage clinic services and booking availability</p>
-      </div>
+      <h2>Service Schedule</h2>
+      <p>Create and manage clinic services and their schedules</p>
+    </div>
+
+    <div class="feedback error-panel" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="feedback success-panel" *ngIf="successMessage">
+      {{ successMessage }}
     </div>
 
     <div class="form-grid">
@@ -24,17 +30,17 @@
 
       <div class="field full-width">
         <label>Description</label>
-        <textarea [(ngModel)]="form.description" rows="3" placeholder="Enter service description"></textarea>
+        <textarea [(ngModel)]="form.description" rows="3" placeholder="Enter description"></textarea>
       </div>
 
       <div class="field">
         <label>Available Days</label>
-        <input type="text" [(ngModel)]="form.availableDays" placeholder="e.g. Mon, Wed, Fri" />
+        <input type="text" [(ngModel)]="form.availableDays" placeholder="Mon, Wed, Fri" />
       </div>
 
       <div class="field">
         <label>Slot Limit</label>
-        <input type="number" [(ngModel)]="form.slotLimit" placeholder="Enter slot limit" />
+        <input type="number" [(ngModel)]="form.slotLimit" />
       </div>
 
       <div class="field">
@@ -55,13 +61,9 @@
         </select>
       </div>
 
-      <div class="field full-width">
+      <div class="field">
         <label>Linked Inventory Items</label>
-        <input
-          type="text"
-          [(ngModel)]="form.linkedInventoryItems"
-          placeholder="e.g. Syringe, Cotton, Gloves"
-        />
+        <input type="text" [(ngModel)]="form.linkedInventoryItems" placeholder="Comma-separated items" />
       </div>
     </div>
 
@@ -70,29 +72,29 @@
         {{ editMode ? 'Update Service' : 'Add Service' }}
       </button>
 
-      <button class="secondary-btn" type="button" (click)="resetForm()" *ngIf="editMode">
-        Cancel Edit
+      <button class="secondary-btn" type="button" *ngIf="editMode" (click)="resetForm()">
+        Cancel
       </button>
     </div>
   </section>
 
   <section class="panel">
-    <div class="panel-header panel-header-row">
+    <div class="panel-header header-row">
       <div>
         <h3>Service List</h3>
-        <p>Manage service schedules and booking status</p>
+        <p>Existing service schedules</p>
       </div>
 
       <div class="search-box">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          placeholder="Search service, category, or status"
-        />
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search service, category, or status" />
       </div>
     </div>
 
-    <div class="table-wrapper">
+    <div *ngIf="isLoading" class="empty-box">
+      Loading services...
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading">
       <table>
         <thead>
           <tr>
@@ -102,42 +104,32 @@
             <th>Time</th>
             <th>Slots</th>
             <th>Status</th>
-            <th>Linked Inventory</th>
             <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           <tr *ngFor="let item of filteredServices">
-            <td>
-              <strong>{{ item.serviceName }}</strong>
-              <div class="muted-text">{{ item.description }}</div>
-            </td>
+            <td>{{ item.service_name }}</td>
             <td>{{ item.category }}</td>
-            <td>{{ item.availableDays }}</td>
-            <td>{{ item.startTime }} - {{ item.endTime }}</td>
-            <td>{{ item.slotLimit }}</td>
+            <td>{{ item.available_days }}</td>
+            <td>{{ item.start_time }} - {{ item.end_time }}</td>
+            <td>{{ item.slot_limit }}</td>
             <td>
-              <span [class]="getStatusClass(item.status)">
+              <span class="status-badge" [ngClass]="item.status.toLowerCase()">
                 {{ item.status }}
               </span>
             </td>
-            <td>{{ item.linkedInventoryItems }}</td>
             <td>
               <div class="action-buttons">
-                <button class="table-btn edit" type="button" (click)="editService(item)">Edit</button>
-                <button class="table-btn toggle" type="button" (click)="toggleStatus(item)">
-                  {{ item.status === 'Active' ? 'Deactivate' : 'Activate' }}
-                </button>
-                <button class="table-btn remove" type="button" (click)="removeService(item.id)">Remove</button>
+                <button class="table-btn edit" (click)="editService(item)">Edit</button>
+                <button class="table-btn delete" (click)="removeService(item.id)">Delete</button>
               </div>
             </td>
           </tr>
 
           <tr *ngIf="filteredServices.length === 0">
-            <td colspan="8" class="empty-state">
-              No services found.
-            </td>
+            <td colspan="7" class="empty-state">No services found.</td>
           </tr>
         </tbody>
       </table>

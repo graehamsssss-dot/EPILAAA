@@ -1,26 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface ServiceOption {
-  id: number;
-  name: string;
-  category: string;
-  description: string;
-  availableDays: string;
-  startTime: string;
-  endTime: string;
-  slotsLeft: number;
-  status: 'Available' | 'Unavailable';
-}
-
-interface BookingRecord {
-  id: number;
-  serviceName: string;
-  bookingDate: string;
-  bookingTime: string;
-  status: 'Pending' | 'Confirmed' | 'Cancelled';
-}
+import { ApiServiceService } from '../../../core/services/api-service.service';
+import { ApiBookingService } from '../../../core/services/api-booking.service';
+import { ServiceItem } from '../../../core/models/service.models';
+import { BookingItem } from '../../../core/models/booking.models';
 
 @Component({
   selector: 'app-patient-booking-page',
@@ -29,89 +13,83 @@ interface BookingRecord {
   templateUrl: './patient-booking-page.html',
   styleUrl: './patient-booking-page.css'
 })
-export class PatientBookingPage {
+export class PatientBookingPage implements OnInit {
   searchTerm = '';
   selectedServiceId: number | null = null;
   selectedDate = '';
   selectedTime = '';
+  notes = '';
+
   bookingMessage = '';
+  errorMessage = '';
+  notificationMessage = 'Select a service on the left to auto-fill available schedule details.';
+  isLoadingServices = false;
+  isLoadingBookings = false;
+  isSubmitting = false;
 
-  services: ServiceOption[] = [
-    {
-      id: 1,
-      name: 'Vaccination',
-      category: 'Vaccination',
-      description: 'Routine and seasonal vaccines.',
-      availableDays: 'Mon, Wed, Fri',
-      startTime: '08:00 AM',
-      endTime: '12:00 PM',
-      slotsLeft: 12,
-      status: 'Available'
-    },
-    {
-      id: 2,
-      name: 'Dental Care',
-      category: 'Dental Care',
-      description: 'Basic dental checkups and oral care.',
-      availableDays: 'Tue, Thu',
-      startTime: '09:00 AM',
-      endTime: '03:00 PM',
-      slotsLeft: 6,
-      status: 'Available'
-    },
-    {
-      id: 3,
-      name: 'Laboratory Tests',
-      category: 'Laboratory Tests',
-      description: 'Urinary and blood-related laboratory services.',
-      availableDays: 'Mon to Sat',
-      startTime: '07:30 AM',
-      endTime: '11:30 AM',
-      slotsLeft: 0,
-      status: 'Unavailable'
-    },
-    {
-      id: 4,
-      name: 'General Check Up',
-      category: 'General Check Up',
-      description: 'Routine medical consultation and assessment.',
-      availableDays: 'Mon to Sat',
-      startTime: '08:00 AM',
-      endTime: '04:00 PM',
-      slotsLeft: 15,
-      status: 'Available'
-    }
-  ];
-
-  bookings: BookingRecord[] = [
-    {
-      id: 1,
-      serviceName: 'Vaccination',
-      bookingDate: '2026-03-24',
-      bookingTime: '09:00 AM',
-      status: 'Confirmed'
-    },
-    {
-      id: 2,
-      serviceName: 'Dental Care',
-      bookingDate: '2026-03-26',
-      bookingTime: '10:30 AM',
-      status: 'Pending'
-    }
-  ];
+  services: ServiceItem[] = [];
+  bookings: BookingItem[] = [];
 
   timeOptions = [
-    '08:00 AM',
-    '08:30 AM',
-    '09:00 AM',
-    '09:30 AM',
-    '10:00 AM',
-    '10:30 AM',
-    '11:00 AM',
-    '11:30 AM'
+    '08:00:00',
+    '08:30:00',
+    '09:00:00',
+    '09:30:00',
+    '10:00:00',
+    '10:30:00',
+    '11:00:00',
+    '11:30:00',
+    '13:00:00',
+    '13:30:00',
+    '14:00:00',
+    '14:30:00',
+    '15:00:00',
+    '15:30:00'
   ];
 
-  get filteredServices(): ServiceOption[] {
+  constructor(
+    private apiServiceService: ApiServiceService,
+    private apiBookingService: ApiBookingService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadServices();
+    this.loadBookings();
+  }
+
+  loadServices(): void {
+    this.isLoadingServices = true;
+
+    this.apiServiceService.getServices().subscribe({
+      next: (response) => {
+        this.services = response.data.filter(item => item.status === 'Active');
+        this.isLoadingServices = false;
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to load services.';
+        this.isLoadingServices = false;
+      }
+    });
+  }
+
+  loadBookings(): void {
+    this.isLoadingBookings = true;
+
+    this.apiBookingService.getMyBookings().subscribe({
+      next: (response) => {
+        this.bookings = response.data;
+        this.isLoadingBookings = false;
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to load bookings.';
+        this.isLoadingBookings = false;
+      }
+    });
+  }
+
+  get filteredServices(): ServiceItem[] {
     const term = this.searchTerm.trim().toLowerCase();
 
     if (!term) {
@@ -119,69 +97,82 @@ export class PatientBookingPage {
     }
 
     return this.services.filter(service =>
-      service.name.toLowerCase().includes(term) ||
+      service.service_name.toLowerCase().includes(term) ||
       service.category.toLowerCase().includes(term) ||
-      service.description.toLowerCase().includes(term)
+      (service.description || '').toLowerCase().includes(term)
     );
   }
 
-  get selectedService(): ServiceOption | undefined {
+  get selectedService(): ServiceItem | undefined {
     return this.services.find(service => service.id === this.selectedServiceId);
   }
 
   chooseService(serviceId: number): void {
     this.selectedServiceId = serviceId;
     this.bookingMessage = '';
+    this.errorMessage = '';
+    this.notes = '';
+
+    const service = this.selectedService;
+    if (service) {
+      this.notificationMessage = `${service.service_name} selected. Available on ${service.available_days} from ${this.formatTime(service.start_time)} to ${this.formatTime(service.end_time)}.`;
+    }
   }
 
   bookAppointment(): void {
+    this.bookingMessage = '';
+    this.errorMessage = '';
+
     if (!this.selectedService || !this.selectedDate || !this.selectedTime) {
-      this.bookingMessage = 'Please select a service, date, and time.';
+      this.errorMessage = 'Please select a service, booking date, and time.';
       return;
     }
 
-    if (this.selectedService.status !== 'Available' || this.selectedService.slotsLeft <= 0) {
-      this.bookingMessage = 'Selected service currently has no available slots.';
-      return;
-    }
+    this.isSubmitting = true;
 
-    this.bookings.unshift({
-      id: Date.now(),
-      serviceName: this.selectedService.name,
+    this.apiBookingService.createBooking({
+      serviceId: this.selectedService.id,
       bookingDate: this.selectedDate,
       bookingTime: this.selectedTime,
-      status: 'Pending'
+      notes: this.notes
+    }).subscribe({
+      next: () => {
+        this.bookingMessage = 'Appointment booked successfully.';
+        this.notificationMessage = 'Your booking was submitted. Please monitor the booking status below.';
+        this.selectedDate = '';
+        this.selectedTime = '';
+        this.notes = '';
+        this.isSubmitting = false;
+        this.loadBookings();
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Booking failed.';
+        this.notificationMessage = 'Booking could not be completed. Please review your selected schedule.';
+        this.isSubmitting = false;
+      }
     });
-
-    this.selectedService.slotsLeft -= 1;
-    if (this.selectedService.slotsLeft <= 0) {
-      this.selectedService.status = 'Unavailable';
-    }
-
-    this.bookingMessage = 'Appointment booked successfully.';
-    this.selectedDate = '';
-    this.selectedTime = '';
   }
 
-  cancelBooking(booking: BookingRecord): void {
-    if (booking.status === 'Cancelled') {
-      return;
-    }
-
-    booking.status = 'Cancelled';
-
-    const service = this.services.find(item => item.name === booking.serviceName);
-    if (service) {
-      service.slotsLeft += 1;
-      service.status = 'Available';
-    }
+  cancelBooking(booking: BookingItem): void {
+    this.apiBookingService.cancelBooking(booking.id).subscribe({
+      next: () => {
+        this.notificationMessage = `Booking for ${booking.service_name} was cancelled.`;
+        this.loadBookings();
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to cancel booking.';
+      }
+    });
   }
 
-  getServiceStatusClass(status: string): string {
-    return `status ${status.toLowerCase()}`;
+  formatTime(value: string): string {
+    if (!value) return '';
+    return value.slice(0, 5);
   }
 
-  getBookingStatusClass(status: string): string {
-    return `status ${status.toLowerCase()}`;
+  getStatusClass(status: string): string {
+    return status.toLowerCase().replace(/\s+/g, '-');
   }
 }

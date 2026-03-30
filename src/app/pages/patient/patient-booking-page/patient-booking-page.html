@@ -1,8 +1,8 @@
 <div class="booking-page">
-  <section class="panel">
+  <div class="page-header panel">
     <div class="panel-header">
       <h2>Book Appointment</h2>
-      <p>Browse available services and reserve a schedule</p>
+      <p>Select a service, review available schedule details, and submit your booking.</p>
     </div>
 
     <div class="search-box">
@@ -12,130 +12,182 @@
         placeholder="Search service or category"
       />
     </div>
-  </section>
+  </div>
 
-  <section class="service-grid">
-    <div
-      class="service-card"
-      *ngFor="let service of filteredServices"
-      [class.selected]="selectedServiceId === service.id"
-    >
-      <div class="service-top">
-        <div>
-          <h3>{{ service.name }}</h3>
-          <p>{{ service.category }}</p>
-        </div>
-        <span [class]="getServiceStatusClass(service.status)">
-          {{ service.status }}
-        </span>
-      </div>
+  <div class="notification-box" *ngIf="notificationMessage">
+    <strong>Notification:</strong> {{ notificationMessage }}
+  </div>
 
-      <p class="service-description">{{ service.description }}</p>
+  <div class="feedback error-panel" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
 
-      <div class="service-meta">
-        <div><strong>Days:</strong> {{ service.availableDays }}</div>
-        <div><strong>Time:</strong> {{ service.startTime }} - {{ service.endTime }}</div>
-        <div><strong>Slots Left:</strong> {{ service.slotsLeft }}</div>
-      </div>
+  <div class="feedback success-panel" *ngIf="bookingMessage">
+    {{ bookingMessage }}
+  </div>
 
-      <button
-        class="select-btn"
-        type="button"
-        (click)="chooseService(service.id)"
-        [disabled]="service.status === 'Unavailable'"
-      >
-        Select Service
-      </button>
-    </div>
-  </section>
-
-  <section class="booking-grid">
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Selected Schedule</h3>
-        <p>Choose your preferred date and time</p>
-      </div>
-
-      <div *ngIf="selectedService; else noSelection" class="form-grid">
-        <div class="field full-width">
-          <label>Selected Service</label>
-          <input type="text" [value]="selectedService.name" readonly />
+  <section class="booking-layout">
+    <!-- LEFT: SERVICES -->
+    <div class="left-column">
+      <div class="panel services-panel">
+        <div class="panel-header">
+          <h3>Available Services</h3>
+          <p>Choose a service to auto-fill its schedule information.</p>
         </div>
 
-        <div class="field">
-          <label>Date</label>
-          <input type="date" [(ngModel)]="selectedDate" />
+        <div *ngIf="isLoadingServices" class="empty-box">
+          Loading services...
         </div>
 
-        <div class="field">
-          <label>Time Slot</label>
-          <select [(ngModel)]="selectedTime">
-            <option value="">Select time</option>
-            <option *ngFor="let time of timeOptions" [value]="time">
-              {{ time }}
-            </option>
-          </select>
-        </div>
-
-        <div class="field full-width">
-          <label>Available Days</label>
-          <input type="text" [value]="selectedService.availableDays" readonly />
-        </div>
-
-        <div class="message" *ngIf="bookingMessage">
-          {{ bookingMessage }}
-        </div>
-
-        <div class="form-actions">
-          <button class="primary-btn" type="button" (click)="bookAppointment()">
-            Confirm Booking
-          </button>
-        </div>
-      </div>
-
-      <ng-template #noSelection>
-        <div class="empty-box">
-          Select a service first to continue with booking.
-        </div>
-      </ng-template>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <h3>My Booking Status</h3>
-        <p>Current and upcoming appointments</p>
-      </div>
-
-      <div class="booking-list" *ngIf="bookings.length > 0; else noBookings">
-        <div class="booking-card" *ngFor="let booking of bookings">
-          <div class="booking-card-top">
-            <div>
-              <h4>{{ booking.serviceName }}</h4>
-              <p>{{ booking.bookingDate }} • {{ booking.bookingTime }}</p>
+        <div class="service-list" *ngIf="!isLoadingServices">
+          <div
+            class="service-card"
+            *ngFor="let service of filteredServices"
+            [class.selected]="selectedServiceId === service.id"
+            (click)="chooseService(service.id)"
+          >
+            <div class="service-top">
+              <div>
+                <h4>{{ service.service_name }}</h4>
+                <p>{{ service.category }}</p>
+              </div>
+              <span class="service-status">{{ service.status }}</span>
             </div>
-            <span [class]="getBookingStatusClass(booking.status)">
-              {{ booking.status }}
-            </span>
+
+            <p class="service-description">
+              {{ service.description || 'No description available.' }}
+            </p>
+
+            <div class="service-meta">
+              <div><strong>Available Days:</strong> {{ service.available_days }}</div>
+              <div><strong>Time:</strong> {{ formatTime(service.start_time) }} - {{ formatTime(service.end_time) }}</div>
+              <div><strong>Slot Limit:</strong> {{ service.slot_limit }}</div>
+            </div>
+
+            <button type="button" class="select-btn">
+              {{ selectedServiceId === service.id ? 'Selected' : 'Choose Service' }}
+            </button>
           </div>
 
-          <div class="booking-actions">
+          <div class="empty-box" *ngIf="filteredServices.length === 0">
+            No services found.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: FORM + STATUS -->
+    <div class="right-column">
+      <div class="panel booking-form-panel">
+        <div class="panel-header">
+          <h3>Booking Form</h3>
+          <p>The selected service details are filled automatically.</p>
+        </div>
+
+        <div *ngIf="selectedService; else noSelection" class="form-grid">
+          <div class="field full-width">
+            <label>Selected Service</label>
+            <input type="text" [value]="selectedService.service_name" readonly />
+          </div>
+
+          <div class="field full-width">
+            <label>Available Days</label>
+            <input type="text" [value]="selectedService.available_days" readonly />
+          </div>
+
+          <div class="field">
+            <label>Start Time</label>
+            <input type="text" [value]="formatTime(selectedService.start_time)" readonly />
+          </div>
+
+          <div class="field">
+            <label>End Time</label>
+            <input type="text" [value]="formatTime(selectedService.end_time)" readonly />
+          </div>
+
+          <div class="field">
+            <label>Booking Date</label>
+            <input type="date" [(ngModel)]="selectedDate" />
+          </div>
+
+          <div class="field">
+            <label>Time Slot</label>
+            <select [(ngModel)]="selectedTime">
+              <option value="">Select time</option>
+              <option *ngFor="let time of timeOptions" [value]="time">
+                {{ formatTime(time) }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field full-width">
+            <label>Additional Notes</label>
+            <textarea
+              [(ngModel)]="notes"
+              rows="4"
+              placeholder="Optional notes for your appointment"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
             <button
-              class="cancel-btn"
+              class="primary-btn"
               type="button"
-              (click)="cancelBooking(booking)"
-              [disabled]="booking.status === 'Cancelled'"
+              (click)="bookAppointment()"
+              [disabled]="isSubmitting"
             >
-              Cancel Booking
+              {{ isSubmitting ? 'Booking...' : 'Confirm Booking' }}
             </button>
           </div>
         </div>
+
+        <ng-template #noSelection>
+          <div class="empty-box">
+            Please select a service from the left side first.
+          </div>
+        </ng-template>
       </div>
 
-      <ng-template #noBookings>
-        <div class="empty-box">
+      <div class="panel status-panel">
+        <div class="panel-header">
+          <h3>Booking Status</h3>
+          <p>Your current and recent appointment requests.</p>
+        </div>
+
+        <div *ngIf="isLoadingBookings" class="empty-box">
+          Loading booking status...
+        </div>
+
+        <div class="booking-status-list" *ngIf="!isLoadingBookings && bookings.length > 0">
+          <div class="status-card" *ngFor="let booking of bookings">
+            <div class="status-card-top">
+              <div>
+                <h4>{{ booking.service_name }}</h4>
+                <p>{{ booking.booking_date }} • {{ formatTime(booking.booking_time) }}</p>
+              </div>
+
+              <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+                {{ booking.status }}
+              </span>
+            </div>
+
+            <div class="status-actions">
+              <button
+                class="cancel-btn"
+                type="button"
+                (click)="cancelBooking(booking)"
+                [disabled]="booking.status === 'Cancelled' || booking.status === 'Completed'"
+              >
+                Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-box" *ngIf="!isLoadingBookings && bookings.length === 0">
           No booking records yet.
         </div>
-      </ng-template>
+      </div>
     </div>
   </section>
 </div>

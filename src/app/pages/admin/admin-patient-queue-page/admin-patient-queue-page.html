@@ -1,39 +1,32 @@
 <div class="queue-page">
   <section class="panel">
-    <div class="panel-header panel-header-row">
-      <div>
-        <h2>Patient Queue</h2>
-        <p>Manage scheduled patients and queue activity</p>
-      </div>
+    <div class="panel-header">
+      <h2>Patient Queue</h2>
+      <p>Manage daily patient queue and service flow</p>
+    </div>
 
-      <div class="refresh-box">
-        <span>Last updated: {{ lastUpdated }}</span>
-        <button class="refresh-btn" type="button" (click)="refreshQueue()">Refresh</button>
-      </div>
+    <div class="feedback error-panel" *ngIf="errorMessage">
+      {{ errorMessage }}
     </div>
 
     <div class="filter-grid">
       <div class="field">
         <label>Search</label>
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          placeholder="Search patient, service, or status"
-        />
-      </div>
-
-      <div class="field">
-        <label>Service</label>
-        <select [(ngModel)]="selectedService">
-          <option *ngFor="let service of serviceOptions" [value]="service">
-            {{ service }}
-          </option>
-        </select>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search patient, service, or status" />
       </div>
 
       <div class="field">
         <label>Date</label>
-        <input type="date" [(ngModel)]="selectedDate" />
+        <input type="date" [(ngModel)]="selectedDate" (change)="loadQueue()" />
+      </div>
+
+      <div class="field">
+        <label>Service</label>
+        <input type="text" [(ngModel)]="selectedService" placeholder="Enter service name" />
+      </div>
+
+      <div class="field button-field">
+        <button class="primary-btn" type="button" (click)="loadQueue()">Apply Filters</button>
       </div>
     </div>
   </section>
@@ -41,17 +34,22 @@
   <section class="panel">
     <div class="panel-header">
       <h3>Queue List</h3>
-      <p>{{ filteredQueue.length }} patient(s) found</p>
+      <p>{{ filteredQueue.length }} record(s)</p>
     </div>
 
-    <div class="table-wrapper">
+    <div *ngIf="isLoading" class="empty-box">
+      Loading queue...
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading">
       <table>
         <thead>
           <tr>
-            <th>Patient Name</th>
-            <th>Scheduled Time</th>
+            <th>Queue No.</th>
+            <th>Patient</th>
             <th>Service</th>
             <th>Date</th>
+            <th>Time</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -59,38 +57,28 @@
 
         <tbody>
           <tr *ngFor="let item of filteredQueue">
-            <td>{{ item.patientName }}</td>
-            <td>{{ item.scheduledTime }}</td>
-            <td>{{ item.service }}</td>
-            <td>{{ item.date }}</td>
+            <td>{{ item.queue_number || '—' }}</td>
+            <td>{{ item.patient_name }}</td>
+            <td>{{ item.service_name }}</td>
+            <td>{{ item.booking_date }}</td>
+            <td>{{ item.booking_time }}</td>
             <td>
-              <span [class]="getStatusClass(item.status)">
+              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
                 {{ item.status }}
               </span>
             </td>
             <td>
               <div class="action-buttons">
-                <button class="table-btn call" type="button" (click)="callPatient(item)">
-                  Call
-                </button>
-                <button class="table-btn progress" type="button" (click)="markInProgress(item)">
-                  In Progress
-                </button>
-                <button class="table-btn complete" type="button" (click)="complete(item)">
-                  Complete
-                </button>
-                <button class="table-btn skip" type="button" (click)="skip(item)">
-                  Skip
-                </button>
-                <button class="table-btn cancel" type="button" (click)="cancel(item)">
-                  Cancel
-                </button>
+                <button class="table-btn progress" (click)="updateStatus(item.id, 'In Progress')">In Progress</button>
+                <button class="table-btn complete" (click)="updateStatus(item.id, 'Completed')">Complete</button>
+                <button class="table-btn skip" (click)="updateStatus(item.id, 'No Show')">Skip</button>
+                <button class="table-btn cancel" (click)="updateStatus(item.id, 'Cancelled')">Cancel</button>
               </div>
             </td>
           </tr>
 
           <tr *ngIf="filteredQueue.length === 0">
-            <td colspan="6" class="empty-state">No queue items found.</td>
+            <td colspan="7" class="empty-state">No queue items found.</td>
           </tr>
         </tbody>
       </table>

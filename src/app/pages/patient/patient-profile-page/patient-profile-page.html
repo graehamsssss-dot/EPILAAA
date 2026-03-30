@@ -1,17 +1,47 @@
-<div class="profile-page">
+<div *ngIf="isLoading" class="profile-page">
+  <section class="profile-grid">
+    <div class="panel identity-panel skeleton-panel">
+      <div class="skeleton skeleton-qr"></div>
+      <div class="skeleton skeleton-title"></div>
+      <div class="skeleton skeleton-text"></div>
+    </div>
+
+    <div class="panel skeleton-panel">
+      <div class="skeleton skeleton-title"></div>
+      <div class="info-grid">
+        <div class="info-item" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+          <div class="skeleton skeleton-label"></div>
+          <div class="skeleton skeleton-value"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div *ngIf="errorMessage" class="panel error-panel">
+  {{ errorMessage }}
+</div>
+
+<div class="profile-page" *ngIf="!isLoading && patient">
+  <div class="profile-actions">
+    <button class="refresh-btn" type="button" (click)="refreshProfile()" [disabled]="isRefreshing">
+      {{ isRefreshing ? 'Refreshing...' : 'Refresh Profile' }}
+    </button>
+  </div>
+
   <section class="profile-grid">
     <div class="panel identity-panel">
       <div class="identity-top">
-        <img [src]="patient.qrCodeUrl" alt="Patient QR Code" class="qr-image" />
+        <img [src]="qrCodeUrl" alt="Patient QR Code" class="qr-image" />
       </div>
 
       <h2>{{ fullName }}</h2>
-      <p class="patient-id">Patient ID: {{ patient.patientId }}</p>
+      <p class="patient-id">Patient ID: {{ patient.patient_id }}</p>
 
       <div class="identity-badges">
         <span class="badge">{{ patient.sex }}</span>
-        <span class="badge">{{ patient.bloodType }}</span>
-        <span class="badge">{{ patient.civilStatus }}</span>
+        <span class="badge">{{ patient.blood_type || 'No Blood Type' }}</span>
+        <span class="badge">{{ patient.civil_status || 'No Civil Status' }}</span>
       </div>
     </div>
 
@@ -24,35 +54,42 @@
       <div class="info-grid">
         <div class="info-item">
           <span>First Name</span>
-          <strong>{{ patient.firstName }}</strong>
+          <strong>{{ patient.first_name }}</strong>
         </div>
+
         <div class="info-item">
           <span>Middle Name</span>
-          <strong>{{ patient.middleName || '—' }}</strong>
+          <strong>{{ patient.middle_name || '—' }}</strong>
         </div>
+
         <div class="info-item">
           <span>Last Name</span>
-          <strong>{{ patient.lastName }}</strong>
+          <strong>{{ patient.last_name }}</strong>
         </div>
+
         <div class="info-item">
           <span>Suffix</span>
           <strong>{{ patient.suffix || '—' }}</strong>
         </div>
+
         <div class="info-item">
           <span>Date of Birth</span>
-          <strong>{{ patient.birthDate }}</strong>
+          <strong>{{ patient.birth_date }}</strong>
         </div>
+
         <div class="info-item">
           <span>Age</span>
-          <strong>{{ patient.age }}</strong>
+          <strong>{{ patient.age ?? '—' }}</strong>
         </div>
+
         <div class="info-item">
           <span>Sex</span>
           <strong>{{ patient.sex }}</strong>
         </div>
+
         <div class="info-item">
           <span>Civil Status</span>
-          <strong>{{ patient.civilStatus }}</strong>
+          <strong>{{ patient.civil_status || '—' }}</strong>
         </div>
       </div>
     </div>
@@ -68,20 +105,24 @@
       <div class="info-grid">
         <div class="info-item">
           <span>Contact Number</span>
-          <strong>{{ patient.contactNumber }}</strong>
+          <strong>{{ patient.contact_number }}</strong>
         </div>
+
         <div class="info-item">
           <span>Email</span>
           <strong>{{ patient.email || '—' }}</strong>
         </div>
+
         <div class="info-item">
           <span>Barangay</span>
           <strong>{{ patient.barangay }}</strong>
         </div>
+
         <div class="info-item">
           <span>Purok / Zone</span>
           <strong>{{ patient.purok || '—' }}</strong>
         </div>
+
         <div class="info-item full-width">
           <span>Complete Address</span>
           <strong>{{ patient.address || '—' }}</strong>
@@ -98,15 +139,17 @@
       <div class="info-grid">
         <div class="info-item">
           <span>Contact Name</span>
-          <strong>{{ patient.emergencyContactName }}</strong>
+          <strong>{{ patient.emergency_contact_name }}</strong>
         </div>
+
         <div class="info-item">
           <span>Contact Number</span>
-          <strong>{{ patient.emergencyContactNumber }}</strong>
+          <strong>{{ patient.emergency_contact_number }}</strong>
         </div>
+
         <div class="info-item full-width">
           <span>Relationship</span>
-          <strong>{{ patient.emergencyRelationship || '—' }}</strong>
+          <strong>{{ patient.emergency_relationship || '—' }}</strong>
         </div>
       </div>
     </div>
@@ -121,19 +164,22 @@
     <div class="info-grid">
       <div class="info-item">
         <span>PhilHealth ID</span>
-        <strong>{{ patient.philhealthId || '—' }}</strong>
+        <strong>{{ patient.philhealth_id || '—' }}</strong>
       </div>
+
       <div class="info-item">
         <span>Blood Type</span>
-        <strong>{{ patient.bloodType || '—' }}</strong>
+        <strong>{{ patient.blood_type || '—' }}</strong>
       </div>
+
       <div class="info-item full-width">
         <span>Known Allergies</span>
         <strong>{{ patient.allergies || 'None reported' }}</strong>
       </div>
+
       <div class="info-item full-width">
         <span>Existing Conditions</span>
-        <strong>{{ patient.existingConditions || 'None reported' }}</strong>
+        <strong>{{ patient.existing_conditions || 'None reported' }}</strong>
       </div>
     </div>
   </section>

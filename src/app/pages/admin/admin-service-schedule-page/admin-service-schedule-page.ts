@@ -1,21 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-type ServiceStatus = 'Active' | 'Inactive';
-
-interface ServiceScheduleItem {
-  id: number;
-  serviceName: string;
-  category: string;
-  description: string;
-  availableDays: string;
-  startTime: string;
-  endTime: string;
-  slotLimit: number;
-  status: ServiceStatus;
-  linkedInventoryItems: string;
-}
+import { ApiAdminService } from '../../../core/services/api-admin.service';
+import { ServiceItem } from '../../../core/models/service.models';
 
 @Component({
   selector: 'app-admin-service-schedule-page',
@@ -24,45 +11,11 @@ interface ServiceScheduleItem {
   templateUrl: './admin-service-schedule-page.html',
   styleUrl: './admin-service-schedule-page.css'
 })
-export class AdminServiceSchedulePage {
-  services: ServiceScheduleItem[] = [
-    {
-      id: 1,
-      serviceName: 'Vaccination',
-      category: 'vaccination',
-      description: 'Routine and seasonal vaccines',
-      availableDays: 'Mon, Wed, Fri',
-      startTime: '08:00',
-      endTime: '12:00',
-      slotLimit: 25,
-      status: 'Active',
-      linkedInventoryItems: 'Syringe, Vaccine Vials, Cotton'
-    },
-    {
-      id: 2,
-      serviceName: 'Dental Care',
-      category: 'dental care',
-      description: 'Basic oral consultation and treatment',
-      availableDays: 'Tue, Thu',
-      startTime: '09:00',
-      endTime: '15:00',
-      slotLimit: 12,
-      status: 'Active',
-      linkedInventoryItems: 'Gloves, Gauze, Dental Kits'
-    },
-    {
-      id: 3,
-      serviceName: 'Laboratory Tests',
-      category: 'laboratory tests',
-      description: 'Urinary and blood related diagnostic tests',
-      availableDays: 'Mon to Sat',
-      startTime: '07:30',
-      endTime: '11:30',
-      slotLimit: 30,
-      status: 'Inactive',
-      linkedInventoryItems: 'Test Tubes, Syringe, Alcohol'
-    }
-  ];
+export class AdminServiceSchedulePage implements OnInit {
+  services: ServiceItem[] = [];
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
 
   categories = [
     'vaccination',
@@ -75,15 +28,19 @@ export class AdminServiceSchedulePage {
     'other'
   ];
 
-  form: ServiceScheduleItem = this.createEmptyForm();
-
+  form: any = this.createEmptyForm();
   editMode = false;
   editingId: number | null = null;
   searchTerm = '';
 
-  createEmptyForm(): ServiceScheduleItem {
+  constructor(private apiAdminService: ApiAdminService) {}
+
+  ngOnInit(): void {
+    this.loadServices();
+  }
+
+  createEmptyForm() {
     return {
-      id: 0,
       serviceName: '',
       category: 'general check up',
       description: '',
@@ -96,7 +53,22 @@ export class AdminServiceSchedulePage {
     };
   }
 
-  get filteredServices(): ServiceScheduleItem[] {
+  loadServices(): void {
+    this.isLoading = true;
+
+    this.apiAdminService.getServices().subscribe({
+      next: (response) => {
+        this.services = response.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to load services.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  get filteredServices(): ServiceItem[] {
     const term = this.searchTerm.trim().toLowerCase();
 
     if (!term) {
@@ -104,64 +76,75 @@ export class AdminServiceSchedulePage {
     }
 
     return this.services.filter(service =>
-      service.serviceName.toLowerCase().includes(term) ||
+      service.service_name.toLowerCase().includes(term) ||
       service.category.toLowerCase().includes(term) ||
       service.status.toLowerCase().includes(term)
     );
   }
 
   saveService(): void {
-    if (
-      !this.form.serviceName ||
-      !this.form.category ||
-      !this.form.availableDays ||
-      !this.form.startTime ||
-      !this.form.endTime ||
-      !this.form.slotLimit
-    ) {
-      return;
-    }
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const payload = { ...this.form };
 
     if (this.editMode && this.editingId !== null) {
-      this.services = this.services.map(service =>
-        service.id === this.editingId ? { ...this.form, id: this.editingId } : service
-      );
+      this.apiAdminService.updateService(this.editingId, payload).subscribe({
+        next: () => {
+          this.successMessage = 'Service updated successfully.';
+          this.resetForm();
+          this.loadServices();
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'Failed to update service.';
+        }
+      });
     } else {
-      const newItem: ServiceScheduleItem = {
-        ...this.form,
-        id: Date.now()
-      };
-      this.services.unshift(newItem);
+      this.apiAdminService.createService(payload).subscribe({
+        next: () => {
+          this.successMessage = 'Service created successfully.';
+          this.resetForm();
+          this.loadServices();
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'Failed to create service.';
+        }
+      });
     }
-
-    this.resetForm();
   }
 
-  editService(item: ServiceScheduleItem): void {
-    this.form = { ...item };
+  editService(item: ServiceItem): void {
+    this.form = {
+      serviceName: item.service_name,
+      category: item.category,
+      description: item.description || '',
+      availableDays: item.available_days,
+      startTime: item.start_time,
+      endTime: item.end_time,
+      slotLimit: item.slot_limit,
+      status: item.status,
+      linkedInventoryItems: item.linked_inventory_items || ''
+    };
+
     this.editMode = true;
     this.editingId = item.id;
   }
 
   removeService(id: number): void {
-    this.services = this.services.filter(service => service.id !== id);
-
-    if (this.editingId === id) {
-      this.resetForm();
-    }
-  }
-
-  toggleStatus(item: ServiceScheduleItem): void {
-    item.status = item.status === 'Active' ? 'Inactive' : 'Active';
+    this.apiAdminService.deleteService(id).subscribe({
+      next: () => {
+        this.successMessage = 'Service deleted successfully.';
+        this.loadServices();
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to delete service.';
+      }
+    });
   }
 
   resetForm(): void {
     this.form = this.createEmptyForm();
     this.editMode = false;
     this.editingId = null;
-  }
-
-  getStatusClass(status: ServiceStatus): string {
-    return status === 'Active' ? 'status active' : 'status inactive';
   }
 }

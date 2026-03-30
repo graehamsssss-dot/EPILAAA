@@ -1,39 +1,42 @@
-<div class="layout-shell">
+<div class="patient-shell">
   <aside class="sidebar">
-    <div class="brand">
-      <img src="/logo.png" alt="ePILA Logo" class="brand-logo" />
-      <div class="brand-text">
-        <h2>ePILA</h2>
-        <p>Patient Portal</p>
+    <div class="sidebar-brand">
+      <div class="brand-main">
+        <img src="/logo.png" alt="ePILA Logo" class="brand-logo" />
+        <div class="brand-text-wrap">
+          <h2 class="brand-name">ePILA</h2>
+          <p class="brand-subtitle">Patient Portal</p>
+        </div>
       </div>
     </div>
 
-    <nav class="nav-links">
+    <nav class="nav-list">
       <a
         *ngFor="let item of patientNavItems"
         [routerLink]="item.path"
-        routerLinkActive="active-link"
+        routerLinkActive="active"
         class="nav-link"
       >
-        {{ item.label }}
+        <span class="nav-dot"></span>
+        <span>{{ item.label }}</span>
       </a>
     </nav>
 
-    <button class="logout-btn" type="button" (click)="logout()">
-      Logout
-    </button>
+    <div class="sidebar-footer">
+      <button class="logout-btn" type="button" (click)="logout()">Logout</button>
+    </div>
   </aside>
 
-  <main class="main-area">
+  <section class="main-wrapper">
     <header class="topbar">
-      <div>
-        <h1>ePILA Patient Portal</h1>
-        <p>Book services, view records, and manage your health profile</p>
+      <div class="topbar-left">
+        <h1>Patient Portal</h1>
+        <p>Manage your profile, bookings, history, and account settings.</p>
       </div>
     </header>
 
-    <section class="page-content">
+    <main class="content-area">
       <router-outlet></router-outlet>
-    </section>
-  </main>
+    </main>
+  </section>
 </div>

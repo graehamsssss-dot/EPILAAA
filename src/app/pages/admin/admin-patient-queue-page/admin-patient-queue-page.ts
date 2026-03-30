@@ -1,17 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-type QueueStatus = 'Waiting' | 'In Progress' | 'Completed' | 'Cancelled' | 'No Show';
-
-interface QueueItem {
-  id: number;
-  patientName: string;
-  scheduledTime: string;
-  service: string;
-  date: string;
-  status: QueueStatus;
-}
+import { ApiAdminService } from '../../../core/services/api-admin.service';
+import { QueueItem } from '../../../core/models/admin.models';
 
 @Component({
   selector: 'app-admin-patient-queue-page',
@@ -20,114 +11,57 @@ interface QueueItem {
   templateUrl: './admin-patient-queue-page.html',
   styleUrl: './admin-patient-queue-page.css'
 })
-export class AdminPatientQueuePage {
+export class AdminPatientQueuePage implements OnInit {
+  queueItems: QueueItem[] = [];
   searchTerm = '';
-  selectedService = 'all';
   selectedDate = '';
-  lastUpdated = new Date().toLocaleTimeString();
+  selectedService = '';
+  isLoading = false;
+  errorMessage = '';
 
-  serviceOptions = [
-    'all',
-    'Vaccination',
-    'Dental Care',
-    'Maternal',
-    'STD Test',
-    'Animal Related / Anti-Rabies',
-    'Laboratory Tests',
-    'General Check Up',
-    'Other'
-  ];
+  constructor(private apiAdminService: ApiAdminService) {}
 
-  queueItems: QueueItem[] = [
-    {
-      id: 1,
-      patientName: 'Juan Dela Cruz',
-      scheduledTime: '08:30 AM',
-      service: 'General Check Up',
-      date: '2026-03-21',
-      status: 'Waiting'
-    },
-    {
-      id: 2,
-      patientName: 'Maria Santos',
-      scheduledTime: '09:00 AM',
-      service: 'Vaccination',
-      date: '2026-03-21',
-      status: 'In Progress'
-    },
-    {
-      id: 3,
-      patientName: 'Ana Lopez',
-      scheduledTime: '10:00 AM',
-      service: 'Laboratory Tests',
-      date: '2026-03-21',
-      status: 'Completed'
-    },
-    {
-      id: 4,
-      patientName: 'Mark Reyes',
-      scheduledTime: '10:30 AM',
-      service: 'Dental Care',
-      date: '2026-03-22',
-      status: 'Waiting'
-    },
-    {
-      id: 5,
-      patientName: 'Liza Cruz',
-      scheduledTime: '11:00 AM',
-      service: 'Maternal',
-      date: '2026-03-22',
-      status: 'No Show'
-    }
-  ];
+  ngOnInit(): void {
+    this.loadQueue();
+  }
+
+  loadQueue(): void {
+    this.isLoading = true;
+
+    this.apiAdminService.getQueue(this.selectedDate || undefined, this.selectedService || undefined).subscribe({
+      next: (response) => {
+        this.queueItems = response.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to load queue.';
+        this.isLoading = false;
+      }
+    });
+  }
 
   get filteredQueue(): QueueItem[] {
     const term = this.searchTerm.trim().toLowerCase();
 
-    return this.queueItems.filter(item => {
-      const matchesSearch =
-        !term ||
-        item.patientName.toLowerCase().includes(term) ||
-        item.service.toLowerCase().includes(term) ||
-        item.status.toLowerCase().includes(term);
+    if (!term) return this.queueItems;
 
-      const matchesService =
-        this.selectedService === 'all' || item.service === this.selectedService;
+    return this.queueItems.filter(item =>
+      item.patient_name.toLowerCase().includes(term) ||
+      item.service_name.toLowerCase().includes(term) ||
+      item.status.toLowerCase().includes(term)
+    );
+  }
 
-      const matchesDate =
-        !this.selectedDate || item.date === this.selectedDate;
-
-      return matchesSearch && matchesService && matchesDate;
+  updateStatus(id: number, status: string): void {
+    this.apiAdminService.updateQueueStatus(id, status).subscribe({
+      next: () => this.loadQueue(),
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to update queue status.';
+      }
     });
   }
 
-  refreshQueue(): void {
-    this.lastUpdated = new Date().toLocaleTimeString();
-  }
-
-  callPatient(item: QueueItem): void {
-    if (item.status === 'Waiting') {
-      item.status = 'In Progress';
-    }
-  }
-
-  markInProgress(item: QueueItem): void {
-    item.status = 'In Progress';
-  }
-
-  complete(item: QueueItem): void {
-    item.status = 'Completed';
-  }
-
-  skip(item: QueueItem): void {
-    item.status = 'No Show';
-  }
-
-  cancel(item: QueueItem): void {
-    item.status = 'Cancelled';
-  }
-
-  getStatusClass(status: QueueStatus): string {
-    return `status ${status.toLowerCase().replace(/\s+/g, '-')}`;
+  getStatusClass(status: string): string {
+    return status.toLowerCase().replace(/\s+/g, '-');
   }
 }

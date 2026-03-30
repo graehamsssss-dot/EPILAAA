@@ -53,13 +53,14 @@ export class LoginPage {
 
         const token = response?.data?.token;
         const role = response?.data?.role;
+        const patientId = response?.data?.patientId ?? null;
 
         if (!token || !role) {
           this.errorMessage = 'Invalid server response.';
           return;
         }
 
-        this.authService.login(token, role);
+        this.authService.login(token, role, patientId);
 
         if (role === 'admin') {
           this.router.navigateByUrl('/admin/dashboard');

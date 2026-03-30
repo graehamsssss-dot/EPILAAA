@@ -1,30 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface PatientProfile {
-  patientId: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  suffix: string;
-  birthDate: string;
-  age: number;
-  sex: string;
-  civilStatus: string;
-  contactNumber: string;
-  email: string;
-  barangay: string;
-  purok: string;
-  address: string;
-  emergencyContactName: string;
-  emergencyContactNumber: string;
-  emergencyRelationship: string;
-  philhealthId: string;
-  bloodType: string;
-  allergies: string;
-  existingConditions: string;
-  qrCodeUrl: string;
-}
+import { ApiPatientService } from '../../../core/services/api-patient.service';
+import { PatientProfile } from '../../../core/models/patient.models';
 
 @Component({
   selector: 'app-patient-profile-page',
@@ -33,40 +10,61 @@ interface PatientProfile {
   templateUrl: './patient-profile-page.html',
   styleUrl: './patient-profile-page.css'
 })
-export class PatientProfilePage {
-  patient: PatientProfile = {
-    patientId: 'EPILA-2026-0001',
-    firstName: 'Juan',
-    middleName: 'Santos',
-    lastName: 'Dela Cruz',
-    suffix: '',
-    birthDate: '2002-05-18',
-    age: 23,
-    sex: 'Male',
-    civilStatus: 'Single',
-    contactNumber: '09123456789',
-    email: 'juan@example.com',
-    barangay: 'San Isidro',
-    purok: 'Purok 3',
-    address: 'San Isidro, Tuguegarao City',
-    emergencyContactName: 'Maria Dela Cruz',
-    emergencyContactNumber: '09987654321',
-    emergencyRelationship: 'Mother',
-    philhealthId: 'PH-1234567890',
-    bloodType: 'O+',
-    allergies: 'Seafood',
-    existingConditions: 'Asthma',
-    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=EPILA-2026-0001'
-  };
+export class PatientProfilePage implements OnInit {
+  patient: PatientProfile | null = null;
+  isLoading = true;
+  isRefreshing = false;
+  errorMessage = '';
+
+  constructor(private apiPatientService: ApiPatientService) {}
+
+  ngOnInit(): void {
+    this.loadProfile();
+  }
+
+  loadProfile(forceRefresh = false): void {
+    if (forceRefresh) {
+      this.isRefreshing = true;
+    } else {
+      this.isLoading = true;
+    }
+
+    this.errorMessage = '';
+
+    this.apiPatientService.getProfile(forceRefresh).subscribe({
+      next: (response) => {
+        this.patient = response.data;
+        this.isLoading = false;
+        this.isRefreshing = false;
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to load patient profile.';
+        this.isLoading = false;
+        this.isRefreshing = false;
+      }
+    });
+  }
+
+  refreshProfile(): void {
+    this.loadProfile(true);
+  }
 
   get fullName(): string {
+    if (!this.patient) return '';
+
     return [
-      this.patient.firstName,
-      this.patient.middleName,
-      this.patient.lastName,
+      this.patient.first_name,
+      this.patient.middle_name,
+      this.patient.last_name,
       this.patient.suffix
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  get qrCodeUrl(): string {
+    if (!this.patient?.qr_code) return '';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${this.patient.qr_code}`;
   }
 }

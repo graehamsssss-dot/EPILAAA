@@ -1,25 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-type InventoryStatus = 'In Stock' | 'Low Stock' | 'Archived';
-
-interface InventoryItem {
-  id: number;
-  itemName: string;
-  linkedService: string;
-  currentStock: number;
-  lowStockThreshold: number;
-  status: InventoryStatus;
-}
-
-interface InventoryLog {
-  id: number;
-  itemName: string;
-  action: string;
-  quantity: number;
-  date: string;
-}
+import { ApiAdminService } from '../../../core/services/api-admin.service';
+import { InventoryItem, InventoryLogItem } from '../../../core/models/admin.models';
 
 @Component({
   selector: 'app-admin-inventory-page',
@@ -28,161 +11,146 @@ interface InventoryLog {
   templateUrl: './admin-inventory-page.html',
   styleUrl: './admin-inventory-page.css'
 })
-export class AdminInventoryPage {
+export class AdminInventoryPage implements OnInit {
+  items: InventoryItem[] = [];
+  logs: InventoryLogItem[] = [];
   searchTerm = '';
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
+  restockAmount = 10;
   editMode = false;
   editingId: number | null = null;
-  restockAmount = 10;
 
-  serviceOptions = [
-    'Vaccination',
-    'Dental Care',
-    'Maternal',
-    'STD Test',
-    'Animal Related / Anti-Rabies',
-    'Laboratory Tests',
-    'General Check Up',
-    'Other'
-  ];
+  form = {
+    itemName: '',
+    linkedService: '',
+    currentStock: 0,
+    lowStockThreshold: 10
+  };
 
-  items: InventoryItem[] = [
-    {
-      id: 1,
-      itemName: 'Syringe 5ml',
-      linkedService: 'Vaccination',
-      currentStock: 8,
-      lowStockThreshold: 10,
-      status: 'Low Stock'
-    },
-    {
-      id: 2,
-      itemName: 'Gloves',
-      linkedService: 'General Check Up',
-      currentStock: 60,
-      lowStockThreshold: 15,
-      status: 'In Stock'
-    },
-    {
-      id: 3,
-      itemName: 'Alcohol',
-      linkedService: 'Laboratory Tests',
-      currentStock: 5,
-      lowStockThreshold: 10,
-      status: 'Low Stock'
-    },
-    {
-      id: 4,
-      itemName: 'Dental Kit',
-      linkedService: 'Dental Care',
-      currentStock: 25,
-      lowStockThreshold: 8,
-      status: 'In Stock'
-    }
-  ];
+  constructor(private apiAdminService: ApiAdminService) {}
 
-  logs: InventoryLog[] = [
-    { id: 1, itemName: 'Syringe 5ml', action: 'Restocked', quantity: 20, date: '2026-03-20' },
-    { id: 2, itemName: 'Alcohol', action: 'Used', quantity: 5, date: '2026-03-20' },
-    { id: 3, itemName: 'Gloves', action: 'Added', quantity: 60, date: '2026-03-19' }
-  ];
+  ngOnInit(): void {
+    this.loadInventory();
+    this.loadLogs();
+  }
 
-  form: InventoryItem = this.createEmptyForm();
+  loadInventory(): void {
+    this.isLoading = true;
 
-  createEmptyForm(): InventoryItem {
-    return {
-      id: 0,
-      itemName: '',
-      linkedService: 'General Check Up',
-      currentStock: 0,
-      lowStockThreshold: 10,
-      status: 'In Stock'
-    };
+    this.apiAdminService.getInventory().subscribe({
+      next: (response) => {
+        this.items = response.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to load inventory.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadLogs(): void {
+    this.apiAdminService.getInventoryLogs().subscribe({
+      next: (response) => {
+        this.logs = response.data;
+      }
+    });
   }
 
   get filteredItems(): InventoryItem[] {
     const term = this.searchTerm.trim().toLowerCase();
 
-    if (!term) {
-      return this.items;
-    }
+    if (!term) return this.items;
 
     return this.items.filter(item =>
-      item.itemName.toLowerCase().includes(term) ||
-      item.linkedService.toLowerCase().includes(term) ||
+      item.item_name.toLowerCase().includes(term) ||
+      item.linked_service.toLowerCase().includes(term) ||
       item.status.toLowerCase().includes(term)
     );
   }
 
-  get lowStockItems(): InventoryItem[] {
-    return this.items.filter(item => item.status === 'Low Stock');
-  }
-
   saveItem(): void {
-    if (!this.form.itemName || !this.form.linkedService) {
-      return;
-    }
-
-    this.form.status = this.computeStatus(this.form.currentStock, this.form.lowStockThreshold);
+    const payload = {
+      itemName: this.form.itemName,
+      linkedService: this.form.linkedService,
+      currentStock: this.form.currentStock,
+      lowStockThreshold: this.form.lowStockThreshold
+    };
 
     if (this.editMode && this.editingId !== null) {
-      this.items = this.items.map(item =>
-        item.id === this.editingId ? { ...this.form, id: this.editingId } : item
-      );
-
-      this.addLog(this.form.itemName, 'Updated', this.form.currentStock);
+      this.apiAdminService.updateInventoryItem(this.editingId, payload).subscribe({
+        next: () => {
+          this.successMessage = 'Inventory item updated.';
+          this.resetForm();
+          this.loadInventory();
+          this.loadLogs();
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'Failed to update inventory item.';
+        }
+      });
     } else {
-      const newItem: InventoryItem = {
-        ...this.form,
-        id: Date.now()
-      };
-      this.items.unshift(newItem);
-      this.addLog(newItem.itemName, 'Added', newItem.currentStock);
+      this.apiAdminService.createInventoryItem(payload).subscribe({
+        next: () => {
+          this.successMessage = 'Inventory item created.';
+          this.resetForm();
+          this.loadInventory();
+          this.loadLogs();
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'Failed to create inventory item.';
+        }
+      });
     }
-
-    this.resetForm();
   }
 
   editItem(item: InventoryItem): void {
-    this.form = { ...item };
+    this.form = {
+      itemName: item.item_name,
+      linkedService: item.linked_service,
+      currentStock: item.current_stock,
+      lowStockThreshold: item.low_stock_threshold
+    };
     this.editMode = true;
     this.editingId = item.id;
   }
 
   restockItem(item: InventoryItem): void {
-    item.currentStock += this.restockAmount;
-    item.status = this.computeStatus(item.currentStock, item.lowStockThreshold);
-    this.addLog(item.itemName, 'Restocked', this.restockAmount);
-  }
-
-  archiveItem(item: InventoryItem): void {
-    item.status = 'Archived';
-    this.addLog(item.itemName, 'Archived', 0);
-  }
-
-  resetForm(): void {
-    this.form = this.createEmptyForm();
-    this.editMode = false;
-    this.editingId = null;
-  }
-
-  computeStatus(stock: number, threshold: number): InventoryStatus {
-    if (stock <= threshold) {
-      return 'Low Stock';
-    }
-    return 'In Stock';
-  }
-
-  addLog(itemName: string, action: string, quantity: number): void {
-    this.logs.unshift({
-      id: Date.now(),
-      itemName,
-      action,
-      quantity,
-      date: new Date().toISOString().slice(0, 10)
+    this.apiAdminService.restockInventoryItem(item.id, this.restockAmount).subscribe({
+      next: () => {
+        this.successMessage = 'Inventory item restocked.';
+        this.loadInventory();
+        this.loadLogs();
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to restock inventory.';
+      }
     });
   }
 
-  getStatusClass(status: InventoryStatus): string {
-    return `status ${status.toLowerCase().replace(/\s+/g, '-')}`;
+  archiveItem(item: InventoryItem): void {
+    this.apiAdminService.archiveInventoryItem(item.id).subscribe({
+      next: () => {
+        this.successMessage = 'Inventory item archived.';
+        this.loadInventory();
+        this.loadLogs();
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'Failed to archive inventory.';
+      }
+    });
+  }
+
+  resetForm(): void {
+    this.form = {
+      itemName: '',
+      linkedService: '',
+      currentStock: 0,
+      lowStockThreshold: 10
+    };
+    this.editMode = false;
+    this.editingId = null;
   }
 }

@@ -1,132 +1,60 @@
 <div class="report-page">
   <section class="panel">
-    <div class="panel-header panel-header-row">
-      <div>
-        <h2>Monthly Health Report</h2>
-        <p>Review service, queue, and inventory summaries</p>
-      </div>
-
-      <div class="filter-row">
-        <div class="field small">
-          <label>Month</label>
-          <select [(ngModel)]="selectedMonth">
-            <option *ngFor="let month of monthOptions" [value]="month">
-              {{ month }}
-            </option>
-          </select>
-        </div>
-
-        <div class="field small">
-          <label>Year</label>
-          <select [(ngModel)]="selectedYear">
-            <option *ngFor="let year of yearOptions" [value]="year">
-              {{ year }}
-            </option>
-          </select>
-        </div>
-
-        <button class="print-btn" type="button">Print Preview</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="cards-grid">
-    <div class="stat-card" *ngFor="let card of reportCards">
-      <p class="card-label">{{ card.label }}</p>
-      <h3 class="card-value">{{ card.value }}</h3>
-      <span class="card-note">{{ card.note }}</span>
-    </div>
-  </section>
-
-  <section class="report-grid">
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Most Used Services</h3>
-        <p>Monthly usage ranking</p>
-      </div>
-
-      <div class="progress-list">
-        <div class="progress-item" *ngFor="let item of mostUsedServices">
-          <div class="progress-label-row">
-            <span>{{ item.service }}</span>
-            <strong>{{ item.count }}</strong>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" [style.width.%]="getBarWidth(item.count, 130)"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Inventory Usage</h3>
-        <p>Most consumed supplies</p>
-      </div>
-
-      <div class="progress-list">
-        <div class="progress-item" *ngFor="let item of inventoryUsage">
-          <div class="progress-label-row">
-            <span>{{ item.itemName }}</span>
-            <strong>{{ item.used }}</strong>
-          </div>
-          <div class="progress-track gray">
-            <div class="progress-fill alt" [style.width.%]="getBarWidth(item.used, 180)"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel">
     <div class="panel-header">
-      <h3>Monthly Trends</h3>
-      <p>6-period performance preview</p>
+      <h2>Monthly Reports</h2>
+      <p>Review generated monthly report summaries</p>
+    </div>
+  </section>
+
+  <section class="panel error-panel" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </section>
+
+  <section class="panel" *ngIf="isLoading">
+    <div class="empty-box">Loading reports...</div>
+  </section>
+
+  <section class="panel" *ngIf="!isLoading && reports.length > 0">
+    <div class="panel-header">
+      <h3>Report Records</h3>
+      <p>{{ reports.length }} report(s)</p>
     </div>
 
-    <div class="trend-chart">
-      <div class="trend-col" *ngFor="let value of monthlyTrendValues; let i = index">
-        <div class="trend-bar" [style.height.%]="getBarWidth(value, 260)"></div>
-        <span>{{ value }}</span>
-        <small>M{{ i + 1 }}</small>
+    <div class="report-list">
+      <div class="report-card" *ngFor="let report of reports">
+        <div class="report-card-top">
+          <div>
+            <h4>{{ report.report_month }} {{ report.report_year }}</h4>
+            <p>Generated report summary</p>
+          </div>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-item">
+            <span>Patient Count</span>
+            <strong>{{ report.patient_count }}</strong>
+          </div>
+
+          <div class="report-item">
+            <span>Service Count</span>
+            <strong>{{ report.service_count }}</strong>
+          </div>
+
+          <div class="report-item">
+            <span>Queue Completion Rate</span>
+            <strong>{{ report.queue_completion_rate }}%</strong>
+          </div>
+
+          <div class="report-item">
+            <span>Low Stock Summary</span>
+            <strong>{{ report.low_stock_summary }}</strong>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="panel printable-section">
-    <div class="panel-header">
-      <h3>{{ selectedMonth }} {{ selectedYear }} Summary</h3>
-      <p>Printable monthly report layout</p>
-    </div>
-
-    <div class="summary-layout">
-      <div class="summary-block">
-        <h4>Patient & Service Overview</h4>
-        <ul>
-          <li>Total patients served: 320</li>
-          <li>Total completed services: 540</li>
-          <li>Most used service: Vaccination</li>
-          <li>Queue completion rate: 89%</li>
-        </ul>
-      </div>
-
-      <div class="summary-block">
-        <h4>Inventory Overview</h4>
-        <ul>
-          <li>Total tracked supply usage: 425 items</li>
-          <li>Low stock items requiring action: 6</li>
-          <li>Most used supply: Gloves</li>
-          <li>Restocking priority: Syringe 5ml, Alcohol, Cotton</li>
-        </ul>
-      </div>
-
-      <div class="summary-block full">
-        <h4>Notes / Export Area</h4>
-        <p>
-          This section is reserved for export-ready report content, printable
-          summaries, signatures, and future backend-generated reporting data.
-        </p>
-      </div>
-    </div>
+  <section class="panel" *ngIf="!isLoading && reports.length === 0">
+    <div class="empty-box">No reports found.</div>
   </section>
 </div>

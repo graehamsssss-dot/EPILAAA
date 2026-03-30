@@ -4,7 +4,6 @@ import { successResponse, errorResponse } from '../utils/response.js';
 export const createBooking = async (req, res, next) => {
   try {
     const { serviceId, bookingDate, bookingTime, notes } = req.body;
-    const userId = req.user.id;
 
     if (!serviceId || !bookingDate || !bookingTime) {
       return errorResponse(res, 'Missing required booking fields', 400);
@@ -12,7 +11,7 @@ export const createBooking = async (req, res, next) => {
 
     const [patientRows] = await pool.query(
       'SELECT id FROM patients WHERE user_id = ? LIMIT 1',
-      [userId]
+      [req.user.id]
     );
 
     if (!patientRows.length) {
@@ -70,13 +69,8 @@ export const createBooking = async (req, res, next) => {
       const bookingId = bookingResult.insertId;
 
       await connection.query(
-        `INSERT INTO patient_queue
-        (
-          booking_id,
-          queue_number,
-          status
-        )
-        VALUES (?, ?, ?)`,
+        `INSERT INTO patient_queue (booking_id, queue_number, status)
+         VALUES (?, ?, ?)`,
         [bookingId, `Q-${bookingId}`, 'Waiting']
       );
 
@@ -96,22 +90,25 @@ export const createBooking = async (req, res, next) => {
 
 export const getMyBookings = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-
     const [rows] = await pool.query(
       `SELECT
          b.id,
          s.service_name,
+         s.category,
          b.booking_date,
          b.booking_time,
          b.status,
-         b.notes
+         b.notes,
+         pq.queue_number,
+         pq.called_at,
+         pq.completed_at
        FROM bookings b
        INNER JOIN patients p ON p.id = b.patient_id
        INNER JOIN services s ON s.id = b.service_id
+       LEFT JOIN patient_queue pq ON pq.booking_id = b.id
        WHERE p.user_id = ?
        ORDER BY b.booking_date DESC, b.booking_time DESC`,
-      [userId]
+      [req.user.id]
     );
 
     return successResponse(res, 'Bookings fetched', rows);
@@ -122,16 +119,13 @@ export const getMyBookings = async (req, res, next) => {
 
 export const cancelBooking = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
     const [rows] = await pool.query(
       `SELECT b.id
        FROM bookings b
        INNER JOIN patients p ON p.id = b.patient_id
        WHERE b.id = ? AND p.user_id = ?
        LIMIT 1`,
-      [id, userId]
+      [req.params.id, req.user.id]
     );
 
     if (!rows.length) {
@@ -142,14 +136,14 @@ export const cancelBooking = async (req, res, next) => {
       `UPDATE bookings
        SET status = 'Cancelled', updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [id]
+      [req.params.id]
     );
 
     await pool.query(
       `UPDATE patient_queue
        SET status = 'Cancelled', updated_at = CURRENT_TIMESTAMP
        WHERE booking_id = ?`,
-      [id]
+      [req.params.id]
     );
 
     return successResponse(res, 'Booking cancelled');

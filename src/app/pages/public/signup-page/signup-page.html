@@ -23,7 +23,7 @@
         <div class="qr-section">
           <img
             id="qrCode"
-            [src]="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + generatedId"
+            [src]="'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + generatedQrCode"
             alt="QR Code"
           />
           <p class="qr-hint">Save this QR code for clinic check-in</p>
@@ -32,22 +32,27 @@
 
         <div class="summary-card">
           <h3>Account Summary</h3>
+
           <div class="summary-row">
             <span>Name:</span>
             <strong>{{ form.firstName }} {{ form.middleName }} {{ form.lastName }} {{ form.suffix }}</strong>
           </div>
+
           <div class="summary-row">
-            <span>Sex:</span>
-            <strong>{{ form.sex }}</strong>
+            <span>Age / Sex:</span>
+            <strong>{{ form.age || '—' }} / {{ form.sex }}</strong>
           </div>
+
           <div class="summary-row">
             <span>Contact:</span>
             <strong>{{ form.contactNumber }}</strong>
           </div>
+
           <div class="summary-row">
             <span>Barangay:</span>
             <strong>{{ form.barangay }}</strong>
           </div>
+
           <div class="summary-row">
             <span>Blood Type:</span>
             <strong>{{ form.bloodType || 'Not specified' }}</strong>
@@ -84,6 +89,7 @@
 
         <div class="step-content" *ngIf="currentStep === 1">
           <h3>Personal Info</h3>
+
           <div class="form-grid">
             <div class="field">
               <label>First Name *</label>
@@ -107,7 +113,12 @@
 
             <div class="field">
               <label>Date of Birth *</label>
-              <input type="date" [(ngModel)]="form.birthDate" />
+              <input type="date" [(ngModel)]="form.birthDate" (change)="calculateAge()" />
+            </div>
+
+            <div class="field">
+              <label>Age</label>
+              <input type="number" [(ngModel)]="form.age" readonly />
             </div>
 
             <div class="field">
@@ -117,11 +128,17 @@
                 <option *ngFor="let s of sexOptions" [value]="s">{{ s }}</option>
               </select>
             </div>
+
+            <div class="field">
+              <label>Civil Status</label>
+              <input type="text" [(ngModel)]="form.civilStatus" placeholder="Single / Married / Widowed" />
+            </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 2">
           <h3>Contact & Address</h3>
+
           <div class="form-grid">
             <div class="field">
               <label>Contact Number *</label>
@@ -137,26 +154,43 @@
               <label>Barangay *</label>
               <input type="text" [(ngModel)]="form.barangay" placeholder="Barangay San Jose" />
             </div>
+
+            <div class="field">
+              <label>Purok / Zone</label>
+              <input type="text" [(ngModel)]="form.purok" placeholder="Purok 1" />
+            </div>
+
+            <div class="field full-width">
+              <label>Complete Address</label>
+              <input type="text" [(ngModel)]="form.address" placeholder="Complete address" />
+            </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 3">
           <h3>Emergency Contact</h3>
+
           <div class="form-grid">
             <div class="field">
-              <label>Contact Person Name *</label>
+              <label>Emergency Contact Name *</label>
               <input type="text" [(ngModel)]="form.emergencyContactName" placeholder="Full Name" />
             </div>
 
             <div class="field">
-              <label>Contact Number *</label>
+              <label>Emergency Contact Number *</label>
               <input type="tel" [(ngModel)]="form.emergencyContactNumber" placeholder="09XX-XXX-XXXX" />
+            </div>
+
+            <div class="field full-width">
+              <label>Relationship to Patient</label>
+              <input type="text" [(ngModel)]="form.emergencyRelationship" placeholder="Mother / Father / Spouse / Sibling" />
             </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 4">
           <h3>Medical Information</h3>
+
           <div class="form-grid">
             <div class="field">
               <label>PhilHealth ID</label>
@@ -172,14 +206,20 @@
             </div>
 
             <div class="field full-width">
-              <label>Allergies</label>
-              <textarea [(ngModel)]="form.allergies" rows="3"></textarea>
+              <label>Known Allergies</label>
+              <textarea [(ngModel)]="form.allergies" rows="3" placeholder="List any allergies"></textarea>
+            </div>
+
+            <div class="field full-width">
+              <label>Existing Medical Conditions</label>
+              <textarea [(ngModel)]="form.existingConditions" rows="3" placeholder="List any medical conditions"></textarea>
             </div>
           </div>
         </div>
 
         <div class="step-content" *ngIf="currentStep === 5">
           <h3>Account Security</h3>
+
           <div class="form-grid security-grid">
             <div class="field full-width">
               <label>Password *</label>
@@ -227,13 +267,33 @@
           <div class="success-message" *ngIf="form.password && form.confirmPassword && form.password === form.confirmPassword">
             ✅ Passwords match
           </div>
+
+          <div class="error-message" *ngIf="submitError">
+            {{ submitError }}
+          </div>
         </div>
 
         <div class="form-nav">
           <button class="nav-btn secondary" *ngIf="currentStep > 1" (click)="prevStep()">← Previous</button>
           <div class="spacer"></div>
-          <button class="nav-btn primary" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="!canProceed()">Next →</button>
-          <button class="nav-btn submit" *ngIf="currentStep === totalSteps" (click)="submitRegistration()" [disabled]="!canProceed()">✓ Sign Up</button>
+
+          <button
+            class="nav-btn primary"
+            *ngIf="currentStep < totalSteps"
+            (click)="nextStep()"
+            [disabled]="!canProceed()"
+          >
+            Next →
+          </button>
+
+          <button
+            class="nav-btn submit"
+            *ngIf="currentStep === totalSteps"
+            (click)="submitRegistration()"
+            [disabled]="!canProceed() || isSubmitting"
+          >
+            {{ isSubmitting ? 'Signing Up...' : '✓ Sign Up' }}
+          </button>
         </div>
       </div>
     </div>
@@ -243,12 +303,14 @@
     <div class="modal-box">
       <button class="modal-close" (click)="closeModal()">✕</button>
       <h2>Terms & Conditions</h2>
+
       <div class="modal-content">
         <p>
           By signing up, you agree to follow the ePILA health center policies
           and protect patient data according to privacy regulations.
         </p>
       </div>
+
       <div class="modal-actions">
         <button class="btn-cancel" (click)="closeModal()">Cancel</button>
         <button class="btn-confirm" (click)="acceptTerms()">Accept</button>

@@ -2,108 +2,128 @@
   <section class="panel">
     <div class="panel-header">
       <h2>Patient Settings</h2>
-      <p>Manage your privacy, password, and account preferences</p>
+      <p>Manage your privacy, account preferences, and password settings.</p>
+    </div>
+
+    <div class="success-panel" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="error-panel" *ngIf="errorMessage">
+      {{ errorMessage }}
     </div>
   </section>
 
   <section class="settings-grid">
-    <div class="panel">
+    <div class="panel setting-card">
       <div class="panel-header">
         <h3>Privacy Settings</h3>
-        <p>Control what information is visible and how the clinic can contact you</p>
+        <p>Control how your account and notifications behave.</p>
       </div>
 
-      <div class="toggle-list">
-        <label class="toggle-item">
-          <span>Profile Visibility</span>
-          <input type="checkbox" [(ngModel)]="privacy.profileVisibility" />
+      <div class="setting-options">
+        <label class="toggle-row">
+          <span>Profile Visible</span>
+          <input type="checkbox" [(ngModel)]="privacySettings.profileVisible" />
         </label>
 
-        <label class="toggle-item">
-          <span>Show Medical Information</span>
-          <input type="checkbox" [(ngModel)]="privacy.showMedicalInfo" />
+        <label class="toggle-row">
+          <span>Booking Notifications</span>
+          <input type="checkbox" [(ngModel)]="privacySettings.bookingNotifications" />
         </label>
 
-        <label class="toggle-item">
-          <span>Allow Contact Notifications</span>
-          <input type="checkbox" [(ngModel)]="privacy.allowContactNotifications" />
+        <label class="toggle-row">
+          <span>Email Updates</span>
+          <input type="checkbox" [(ngModel)]="privacySettings.emailUpdates" />
         </label>
       </div>
 
       <div class="form-actions">
-        <button class="primary-btn" type="button" (click)="savePrivacy()">Save Privacy Settings</button>
+        <button class="primary-btn" type="button" (click)="savePrivacySettings()">
+          Save Privacy Settings
+        </button>
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel setting-card">
       <div class="panel-header">
         <h3>Account Preferences</h3>
-        <p>Choose your preferred experience inside the portal</p>
+        <p>Customize reminders and interface behavior.</p>
       </div>
 
       <div class="form-grid">
-        <div class="field full-width">
+        <div class="field">
           <label>Preferred Language</label>
-          <select [(ngModel)]="preferences.preferredLanguage">
-            <option *ngFor="let language of languageOptions" [value]="language">
-              {{ language }}
-            </option>
+          <select [(ngModel)]="preferencesForm.preferredLanguage">
+            <option value="English">English</option>
+            <option value="Filipino">Filipino</option>
           </select>
+        </div>
+
+        <div class="field">
+          <label>Reminder Mode</label>
+          <select [(ngModel)]="preferencesForm.reminderMode">
+            <option value="Email">Email</option>
+            <option value="SMS">SMS</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
+
+        <div class="field full-width">
+          <label class="toggle-row">
+            <span>Enable Dark Mode Style Preference</span>
+            <input type="checkbox" [(ngModel)]="preferencesForm.darkMode" />
+          </label>
         </div>
       </div>
 
-      <div class="toggle-list">
-        <label class="toggle-item">
-          <span>Dark Mode</span>
-          <input type="checkbox" [(ngModel)]="preferences.darkMode" />
-        </label>
-
-        <label class="toggle-item">
-          <span>Appointment Reminders</span>
-          <input type="checkbox" [(ngModel)]="preferences.receiveAppointmentReminders" />
-        </label>
-
-        <label class="toggle-item">
-          <span>Queue Updates</span>
-          <input type="checkbox" [(ngModel)]="preferences.receiveQueueUpdates" />
-        </label>
-      </div>
-
       <div class="form-actions">
-        <button class="primary-btn" type="button" (click)="savePreferences()">Save Preferences</button>
+        <button class="primary-btn" type="button" (click)="savePreferences()">
+          Save Preferences
+        </button>
       </div>
     </div>
   </section>
 
   <section class="panel">
     <div class="panel-header">
-      <h3>Password Update</h3>
-      <p>Change your account password securely</p>
+      <h3>Change Password</h3>
+      <p>Update your account password securely.</p>
     </div>
 
     <div class="form-grid">
-      <div class="field">
+      <div class="field full-width">
         <label>Current Password</label>
-        <input type="password" [(ngModel)]="passwordForm.currentPassword" />
+        <input
+          type="password"
+          [(ngModel)]="passwordForm.currentPassword"
+          placeholder="Enter current password"
+        />
       </div>
 
       <div class="field">
         <label>New Password</label>
-        <input type="password" [(ngModel)]="passwordForm.newPassword" />
+        <input
+          type="password"
+          [(ngModel)]="passwordForm.newPassword"
+          placeholder="Enter new password"
+        />
       </div>
 
-      <div class="field full-width">
+      <div class="field">
         <label>Confirm New Password</label>
-        <input type="password" [(ngModel)]="passwordForm.confirmPassword" />
+        <input
+          type="password"
+          [(ngModel)]="passwordForm.confirmPassword"
+          placeholder="Confirm new password"
+        />
       </div>
-    </div>
-
-    <div class="message" *ngIf="passwordMessage">
-      {{ passwordMessage }}
     </div>
 
     <div class="form-actions">
-      <button class="primary-btn" type="button" (click)="updatePassword()">Update Password</button>
+      <button class="primary-btn" type="button" (click)="updatePassword()">
+        Update Password
+      </button>
     </div>
   </section>
 </div>

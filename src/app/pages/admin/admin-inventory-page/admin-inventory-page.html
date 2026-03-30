@@ -1,10 +1,16 @@
 <div class="inventory-page">
   <section class="panel">
     <div class="panel-header">
-      <div>
-        <h2>Inventory Management</h2>
-        <p>Manage medical supplies, stock levels, and linked service items</p>
-      </div>
+      <h2>Inventory Management</h2>
+      <p>Manage inventory items, stock levels, and item logs</p>
+    </div>
+
+    <div class="feedback error-panel" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="feedback success-panel" *ngIf="successMessage">
+      {{ successMessage }}
     </div>
 
     <div class="form-grid">
@@ -15,21 +21,17 @@
 
       <div class="field">
         <label>Linked Service</label>
-        <select [(ngModel)]="form.linkedService">
-          <option *ngFor="let service of serviceOptions" [value]="service">
-            {{ service }}
-          </option>
-        </select>
+        <input type="text" [(ngModel)]="form.linkedService" placeholder="Enter linked service" />
       </div>
 
       <div class="field">
         <label>Current Stock</label>
-        <input type="number" [(ngModel)]="form.currentStock" placeholder="Enter stock" />
+        <input type="number" [(ngModel)]="form.currentStock" />
       </div>
 
       <div class="field">
         <label>Low Stock Threshold</label>
-        <input type="number" [(ngModel)]="form.lowStockThreshold" placeholder="Enter threshold" />
+        <input type="number" [(ngModel)]="form.lowStockThreshold" />
       </div>
     </div>
 
@@ -38,70 +40,36 @@
         {{ editMode ? 'Update Item' : 'Add Item' }}
       </button>
 
-      <button class="secondary-btn" type="button" (click)="resetForm()" *ngIf="editMode">
-        Cancel Edit
+      <button class="secondary-btn" type="button" *ngIf="editMode" (click)="resetForm()">
+        Cancel
       </button>
     </div>
   </section>
 
-  <section class="alert-grid">
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Low Stock Alerts</h3>
-        <p>{{ lowStockItems.length }} item(s) need attention</p>
-      </div>
-
-      <div class="alert-list">
-        <div class="alert-item" *ngFor="let item of lowStockItems">
-          <div>
-            <strong>{{ item.itemName }}</strong>
-            <p>{{ item.linkedService }}</p>
-          </div>
-          <span class="low-alert">{{ item.currentStock }} left</span>
-        </div>
-
-        <div class="empty-state" *ngIf="lowStockItems.length === 0">
-          No low stock alerts.
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Quick Restock</h3>
-        <p>Default restock quantity for item actions</p>
-      </div>
-
-      <div class="field">
-        <label>Restock Amount</label>
-        <input type="number" [(ngModel)]="restockAmount" />
-      </div>
-    </div>
-  </section>
-
   <section class="panel">
-    <div class="panel-header panel-header-row">
+    <div class="panel-header header-row">
       <div>
         <h3>Inventory Items</h3>
-        <p>Track stock, service links, and item status</p>
+        <p>Current stock and service-linked items</p>
       </div>
 
-      <div class="search-box">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          placeholder="Search item, service, or status"
-        />
+      <div class="right-tools">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search item, service, or status" />
+        <input type="number" [(ngModel)]="restockAmount" placeholder="Restock qty" />
       </div>
     </div>
 
-    <div class="table-wrapper">
+    <div *ngIf="isLoading" class="empty-box">
+      Loading inventory...
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading">
       <table>
         <thead>
           <tr>
-            <th>Item Name</th>
+            <th>Item</th>
             <th>Linked Service</th>
-            <th>Current Stock</th>
+            <th>Stock</th>
             <th>Threshold</th>
             <th>Status</th>
             <th>Actions</th>
@@ -110,24 +78,20 @@
 
         <tbody>
           <tr *ngFor="let item of filteredItems">
-            <td>{{ item.itemName }}</td>
-            <td>{{ item.linkedService }}</td>
-            <td>{{ item.currentStock }}</td>
-            <td>{{ item.lowStockThreshold }}</td>
+            <td>{{ item.item_name }}</td>
+            <td>{{ item.linked_service }}</td>
+            <td>{{ item.current_stock }}</td>
+            <td>{{ item.low_stock_threshold }}</td>
             <td>
-              <span [class]="getStatusClass(item.status)">
+              <span class="status-badge" [ngClass]="item.status.toLowerCase().replace(' ', '-')">
                 {{ item.status }}
               </span>
             </td>
             <td>
               <div class="action-buttons">
-                <button class="table-btn edit" type="button" (click)="editItem(item)">Edit</button>
-                <button class="table-btn restock" type="button" (click)="restockItem(item)" [disabled]="item.status === 'Archived'">
-                  Restock
-                </button>
-                <button class="table-btn archive" type="button" (click)="archiveItem(item)" [disabled]="item.status === 'Archived'">
-                  Archive
-                </button>
+                <button class="table-btn edit" (click)="editItem(item)">Edit</button>
+                <button class="table-btn restock" (click)="restockItem(item)">Restock</button>
+                <button class="table-btn archive" (click)="archiveItem(item)">Archive</button>
               </div>
             </td>
           </tr>
@@ -142,8 +106,8 @@
 
   <section class="panel">
     <div class="panel-header">
-      <h3>Inventory Logs / History</h3>
-      <p>Recent stock activity</p>
+      <h3>Inventory Logs</h3>
+      <p>Recent inventory activity</p>
     </div>
 
     <div class="table-wrapper">
@@ -153,20 +117,22 @@
             <th>Item</th>
             <th>Action</th>
             <th>Quantity</th>
+            <th>Remarks</th>
             <th>Date</th>
           </tr>
         </thead>
 
         <tbody>
           <tr *ngFor="let log of logs">
-            <td>{{ log.itemName }}</td>
-            <td>{{ log.action }}</td>
+            <td>{{ log.item_name }}</td>
+            <td>{{ log.action_type }}</td>
             <td>{{ log.quantity }}</td>
-            <td>{{ log.date }}</td>
+            <td>{{ log.remarks || '—' }}</td>
+            <td>{{ log.created_at }}</td>
           </tr>
 
           <tr *ngIf="logs.length === 0">
-            <td colspan="4" class="empty-state">No inventory logs found.</td>
+            <td colspan="5" class="empty-state">No inventory logs found.</td>
           </tr>
         </tbody>
       </table>

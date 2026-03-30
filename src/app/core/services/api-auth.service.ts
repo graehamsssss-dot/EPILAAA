@@ -2,6 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../constants/api.constants';
+import {
+  ApiResponse,
+  LoginData,
+  LoginPayload,
+  RegisterData,
+  RegisterPayload
+} from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -9,15 +16,27 @@ import { API_BASE_URL } from '../constants/api.constants';
 export class ApiAuthService {
   constructor(private http: HttpClient) {}
 
-  login(payload: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${API_BASE_URL}/auth/login`, payload);
+  login(payload: LoginPayload): Observable<ApiResponse<LoginData>> {
+    return this.http.post<ApiResponse<LoginData>>(
+      `${API_BASE_URL}/auth/login`,
+      payload
+    );
   }
 
-  register(payload: any): Observable<any> {
-    return this.http.post(`${API_BASE_URL}/auth/register`, payload);
+  register(payload: RegisterPayload): Observable<ApiResponse<RegisterData>> {
+    return this.http.post<ApiResponse<RegisterData>>(
+      `${API_BASE_URL}/auth/register`,
+      payload
+    );
   }
 
-  me(): Observable<any> {
-    return this.http.get(`${API_BASE_URL}/auth/me`);
+  me(): Observable<ApiResponse<{ user: any }>> {
+    return this.http.get<ApiResponse<{ user: any }>>(
+      `${API_BASE_URL}/auth/me`
+    );
   }
+  
+  
+  
+
 }
