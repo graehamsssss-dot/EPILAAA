@@ -2,26 +2,21 @@
   <section class="panel">
     <div class="panel-header">
       <h2>Inventory Management</h2>
-      <p>Manage inventory items, stock levels, and item logs</p>
+      <p>Track stock, restock items, and review inventory logs.</p>
     </div>
 
-    <div class="feedback error-panel" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
-
-    <div class="feedback success-panel" *ngIf="successMessage">
-      {{ successMessage }}
-    </div>
+    <div class="feedback error-panel" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="feedback success-panel" *ngIf="successMessage">{{ successMessage }}</div>
 
     <div class="form-grid">
       <div class="field">
         <label>Item Name</label>
-        <input type="text" [(ngModel)]="form.itemName" placeholder="Enter item name" />
+        <input type="text" [(ngModel)]="form.itemName" />
       </div>
 
       <div class="field">
         <label>Linked Service</label>
-        <input type="text" [(ngModel)]="form.linkedService" placeholder="Enter linked service" />
+        <input type="text" [(ngModel)]="form.linkedService" />
       </div>
 
       <div class="field">
@@ -36,11 +31,11 @@
     </div>
 
     <div class="form-actions">
-      <button class="primary-btn" type="button" (click)="saveItem()">
+      <button class="primary-btn" (click)="saveItem()">
         {{ editMode ? 'Update Item' : 'Add Item' }}
       </button>
 
-      <button class="secondary-btn" type="button" *ngIf="editMode" (click)="resetForm()">
+      <button class="secondary-btn" *ngIf="editMode" (click)="resetForm()">
         Cancel
       </button>
     </div>
@@ -50,25 +45,21 @@
     <div class="panel-header header-row">
       <div>
         <h3>Inventory Items</h3>
-        <p>Current stock and service-linked items</p>
+        <p>Current stock list</p>
       </div>
 
       <div class="right-tools">
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Search item, service, or status" />
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search inventory" />
         <input type="number" [(ngModel)]="restockAmount" placeholder="Restock qty" />
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="empty-box">
-      Loading inventory...
-    </div>
-
-    <div class="table-wrapper" *ngIf="!isLoading">
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
             <th>Item</th>
-            <th>Linked Service</th>
+            <th>Service</th>
             <th>Stock</th>
             <th>Threshold</th>
             <th>Status</th>
@@ -95,10 +86,6 @@
               </div>
             </td>
           </tr>
-
-          <tr *ngIf="filteredItems.length === 0">
-            <td colspan="6" class="empty-state">No inventory items found.</td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -107,7 +94,7 @@
   <section class="panel">
     <div class="panel-header">
       <h3>Inventory Logs</h3>
-      <p>Recent inventory activity</p>
+      <p>Recent stock activity</p>
     </div>
 
     <div class="table-wrapper">
@@ -129,10 +116,6 @@
             <td>{{ log.quantity }}</td>
             <td>{{ log.remarks || '—' }}</td>
             <td>{{ log.created_at }}</td>
-          </tr>
-
-          <tr *ngIf="logs.length === 0">
-            <td colspan="5" class="empty-state">No inventory logs found.</td>
           </tr>
         </tbody>
       </table>

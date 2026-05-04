@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiAuthService } from '../../../core/services/api-auth.service';
+import { AdminPreloadService } from '../../../core/services/admin-preload.service';
 
 @Component({
   selector: 'app-login-page',
@@ -22,7 +23,8 @@ export class LoginPage {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private apiAuthService: ApiAuthService
+    private apiAuthService: ApiAuthService,
+    private adminPreloadService: AdminPreloadService
   ) {}
 
   goToHome(): void {
@@ -49,13 +51,12 @@ export class LoginPage {
       password: this.password
     }).subscribe({
       next: (response) => {
-        this.isLoading = false;
-
         const token = response?.data?.token;
         const role = response?.data?.role;
         const patientId = response?.data?.patientId ?? null;
 
         if (!token || !role) {
+          this.isLoading = false;
           this.errorMessage = 'Invalid server response.';
           return;
         }
@@ -63,16 +64,25 @@ export class LoginPage {
         this.authService.login(token, role, patientId);
 
         if (role === 'admin') {
-          this.router.navigateByUrl('/admin/dashboard');
+          this.adminPreloadService.preloadAdminData().subscribe({
+            next: () => {
+              this.isLoading = false;
+              this.router.navigate(['/admin/dashboard']);
+            },
+            error: () => {
+              this.isLoading = false;
+              this.router.navigate(['/admin/dashboard']);
+            }
+          });
         } else {
-          this.router.navigateByUrl('/patient/profile');
+          this.isLoading = false;
+          this.router.navigate(['/patient/profile']);
         }
       },
       error: (error) => {
         this.isLoading = false;
         this.errorMessage =
-          error?.error?.message ||
-          'Login failed. Please check your credentials.';
+          error?.error?.message || 'Login failed. Please check your credentials.';
       }
     });
   }

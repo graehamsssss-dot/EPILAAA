@@ -7,40 +7,188 @@
 </div>
 
 <div class="dashboard-page" *ngIf="!isLoading && !errorMessage">
+  <section class="hero-panel">
+    <div class="hero-copy">
+      <p class="hero-eyebrow">ePILA Admin Overview</p>
+      <h2>Clinic operations dashboard</h2>
+      <p>
+        Monitor reminders, queue flow, stock alerts, and consultation trends
+        in one clean admin view.
+      </p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header header-row">
+      <div>
+        <h3>Dashboard Filters</h3>
+        <p>Switch dashboard analytics view.</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="primary-btn" type="button" (click)="refreshDashboard()" [disabled]="isLoading">
+          Refresh Dashboard
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-grid single-filter">
+      <div class="field">
+        <label>Range</label>
+        <select [(ngModel)]="selectedRange">
+          <option *ngFor="let range of availableRanges" [value]="range.value">
+            {{ range.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="primary-btn" type="button" (click)="applyFilters()">Apply</button>
+        <button class="secondary-btn" type="button" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+  </section>
+
   <section class="cards-grid">
     <div class="stat-card" *ngFor="let card of summaryCards">
       <p class="card-label">{{ card.title }}</p>
-      <h2 class="card-value">{{ card.value }}</h2>
+      <h3 class="card-value">{{ card.value }}</h3>
       <span class="card-note">{{ card.note }}</span>
     </div>
   </section>
 
-  <section class="panel chart-panel">
-    <div class="panel-header">
-      <h3>Overview</h3>
-      <p>Quick summary of admin system activity</p>
+  <section class="dashboard-grid">
+    <div class="panel reminders-panel">
+      <div class="panel-header">
+        <h3>Reminders</h3>
+        <p>Important daily admin alerts</p>
+      </div>
+
+      <div class="reminder-list" *ngIf="reminders.length > 0; else noReminders">
+        <div class="reminder-item" *ngFor="let reminder of reminders; trackBy: trackByReminder">
+          <span class="reminder-dot"></span>
+          <span>{{ reminder }}</span>
+        </div>
+      </div>
+
+      <ng-template #noReminders>
+        <div class="empty-box">No reminders available.</div>
+      </ng-template>
     </div>
 
-    <div class="overview-grid" *ngIf="summary">
-      <div class="overview-box">
-        <span>Patients in Queue</span>
-        <strong>{{ summary.patientsInQueue }}</strong>
+    <div class="panel upcoming-panel">
+      <div class="panel-header">
+        <h3>Upcoming Patients in Queue</h3>
+        <p>Next active queue entries</p>
       </div>
 
-      <div class="overview-box">
-        <span>Low Stock Items</span>
-        <strong>{{ summary.lowStockItems }}</strong>
+      <div class="queue-list" *ngIf="upcomingQueue.length > 0; else noQueue">
+        <div class="queue-card" *ngFor="let item of upcomingQueue; trackBy: trackByQueueId">
+          <div class="queue-main">
+            <strong>{{ item.patient_name }}</strong>
+            <p>{{ item.service_name }}</p>
+            <small>{{ item.booking_date }} • {{ item.booking_time }}</small>
+          </div>
+
+          <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+            {{ item.status }}
+          </span>
+        </div>
       </div>
 
-      <div class="overview-box">
-        <span>Reports</span>
-        <strong>{{ summary.reports }}</strong>
+      <ng-template #noQueue>
+        <div class="empty-box">No upcoming patients in queue.</div>
+      </ng-template>
+    </div>
+  </section>
+
+  <section class="charts-grid">
+    <div class="panel chart-card">
+      <div class="panel-header">
+        <h3>{{ selectedRange === 'weekly' ? 'Weekly Consultations' : 'Monthly Consultations' }}</h3>
+        <p>Consultation trend overview</p>
       </div>
 
-      <div class="overview-box">
-        <span>Completed Today</span>
-        <strong>{{ summary.completedToday }}</strong>
+      <div *ngIf="monthlyConsultationData.length > 0; else noLineData" class="line-chart-wrapper">
+        <div class="chart-top-meta">
+          <div>
+            <span class="meta-label">Highest Value</span>
+            <strong>{{ maxConsultationValue }}</strong>
+          </div>
+
+          <div>
+            <span class="meta-label">Points Tracked</span>
+            <strong>{{ monthlyConsultationData.length }}</strong>
+          </div>
+        </div>
+
+        <div class="line-chart-box">
+          <svg viewBox="0 0 100 100" class="line-chart" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lineGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#60a5fa"></stop>
+                <stop offset="100%" stop-color="#34d399"></stop>
+              </linearGradient>
+            </defs>
+
+            <polyline
+              [attr.points]="linePoints"
+              fill="none"
+              stroke="url(#lineGlow)"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></polyline>
+          </svg>
+        </div>
+
+        <div class="line-bars">
+          <div class="mini-bar" *ngFor="let item of monthlyConsultationData; trackBy: trackByLabel">
+            <div
+              class="mini-bar-fill"
+              [style.height.%]="maxConsultationValue ? (item.value / maxConsultationValue) * 100 : 0"
+            ></div>
+            <span>{{ item.label }}</span>
+          </div>
+        </div>
       </div>
+
+      <ng-template #noLineData>
+        <div class="empty-box">No consultation data yet.</div>
+      </ng-template>
+    </div>
+
+    <div class="panel chart-card">
+      <div class="panel-header">
+        <h3>Service Distribution</h3>
+        <p>Most used service categories</p>
+      </div>
+
+      <div class="pie-layout" *ngIf="serviceDistribution.length > 0; else noPieData">
+        <div class="pie-chart-wrap">
+          <div class="pie-chart" [style.background]="pieStyle"></div>
+
+          <div class="pie-center">
+            <span>Total</span>
+            <strong>{{ totalServiceDistribution }}</strong>
+          </div>
+        </div>
+
+        <div class="pie-legend">
+          <div class="legend-item" *ngFor="let item of serviceDistribution; let i = index; trackBy: trackByLabel">
+            <span class="legend-dot legend-{{ i }}"></span>
+
+            <div class="legend-copy">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noPieData>
+        <div class="empty-box">No service distribution data yet.</div>
+      </ng-template>
     </div>
   </section>
 </div>

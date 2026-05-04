@@ -1,40 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface AdminProfile {
-  fullName: string;
-  email: string;
-  contactNumber: string;
-  role: string;
-}
-
-interface PasswordForm {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface PrivacySettings {
-  profileVisibility: boolean;
-  auditLogsVisible: boolean;
-  sessionAlerts: boolean;
-}
-
-interface NotificationSettings {
-  emailNotifications: boolean;
-  smsNotifications: boolean;
-  queueAlerts: boolean;
-  lowStockAlerts: boolean;
-  monthlyReports: boolean;
-}
-
-interface SystemSettings {
-  bookingEnabled: boolean;
-  allowPatientCancellation: boolean;
-  queueAutoRefresh: boolean;
-  inventoryAutoDeduction: boolean;
-}
+import { ApiSettingsService } from '../../../core/services/api-settings.service';
+import { ApiAuthService } from '../../../core/services/api-auth.service';
+import { ApiUserService } from '../../../core/services/api-user.service';
+import { SettingItem } from '../../../core/models/settings.models';
 
 @Component({
   selector: 'app-admin-settings-page',
@@ -43,75 +13,148 @@ interface SystemSettings {
   templateUrl: './admin-settings-page.html',
   styleUrl: './admin-settings-page.css'
 })
-export class AdminSettingsPage {
-  profile: AdminProfile = {
-    fullName: 'Admin User',
-    email: 'admin@epila.local',
-    contactNumber: '09123456789',
-    role: 'System Administrator'
+export class AdminSettingsPage implements OnInit {
+  successMessage = '';
+  errorMessage = '';
+  isLoading = false;
+
+  profileForm = {
+    fullName: '',
+    email: '',
+    contactNumber: ''
   };
 
-  passwordForm: PasswordForm = {
+  passwordForm = {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   };
 
-  privacy: PrivacySettings = {
-    profileVisibility: true,
-    auditLogsVisible: true,
-    sessionAlerts: true
-  };
-
-  notifications: NotificationSettings = {
-    emailNotifications: true,
-    smsNotifications: false,
+  preferences = {
+    notifications: true,
+    reportAlerts: true,
     queueAlerts: true,
-    lowStockAlerts: true,
-    monthlyReports: true
+    inventoryAlerts: true
   };
 
-  system: SystemSettings = {
-    bookingEnabled: true,
-    allowPatientCancellation: true,
-    queueAutoRefresh: true,
-    inventoryAutoDeduction: true
-  };
+  constructor(
+    private apiSettingsService: ApiSettingsService,
+    private apiAuthService: ApiAuthService,
+    private apiUserService: ApiUserService
+  ) {}
 
-  passwordMessage = '';
-
-  saveProfile(): void {
-    alert('Profile settings saved.');
+  ngOnInit(): void {
+    this.loadSettings();
   }
 
-  savePassword(): void {
-    if (!this.passwordForm.currentPassword || !this.passwordForm.newPassword || !this.passwordForm.confirmPassword) {
-      this.passwordMessage = 'Please fill in all password fields.';
+  loadSettings(): void {
+    this.isLoading = true;
+
+    Promise.all([
+      this.apiUserService.getCurrentUserProfile().toPromise(),
+      this.apiSettingsService.getSettings().toPromise()
+    ])
+      .then(([profileResponse, settingsResponse]) => {
+        const profile = profileResponse?.data;
+        const settings = settingsResponse?.data || [];
+
+        if (profile) {
+          this.profileForm = {
+            fullName: profile.fullName || '',
+            email: profile.email || '',
+            contactNumber: profile.contactNumber || ''
+          };
+        }
+
+        const notifications = settings.find(
+          (item: SettingItem) => item.setting_key === 'admin_notifications'
+        );
+
+        if (notifications?.setting_value) {
+          this.preferences = {
+            ...this.preferences,
+            ...notifications.setting_value
+          };
+        }
+
+        this.isLoading = false;
+      })
+      .catch((error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to load admin settings.';
+        this.isLoading = false;
+      });
+  }
+
+  saveProfile(): void {
+    this.clearMessages();
+
+    this.apiUserService.updateAdminProfile(this.profileForm).subscribe({
+      next: () => {
+        this.successMessage = 'Admin profile updated successfully.';
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to save admin profile.';
+      }
+    });
+  }
+
+  savePreferences(): void {
+    this.clearMessages();
+
+    this.apiSettingsService.saveSetting({
+      settingKey: 'admin_notifications',
+      settingValue: this.preferences
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Notification preferences saved.';
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to save preferences.';
+      }
+    });
+  }
+
+  updatePassword(): void {
+    this.clearMessages();
+
+    if (
+      !this.passwordForm.currentPassword ||
+      !this.passwordForm.newPassword ||
+      !this.passwordForm.confirmPassword
+    ) {
+      this.errorMessage = 'Please complete all password fields.';
       return;
     }
 
     if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-      this.passwordMessage = 'New password and confirm password do not match.';
+      this.errorMessage = 'New password and confirm password do not match.';
       return;
     }
 
-    this.passwordMessage = 'Password updated successfully.';
-    this.passwordForm = {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    };
+    this.apiAuthService.changePassword({
+      currentPassword: this.passwordForm.currentPassword,
+      newPassword: this.passwordForm.newPassword
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Password updated successfully.';
+        this.passwordForm = {
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        };
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message || 'Failed to update password.';
+      }
+    });
   }
 
-  savePrivacy(): void {
-    alert('Privacy settings saved.');
-  }
-
-  saveNotifications(): void {
-    alert('Notification preferences saved.');
-  }
-
-  saveSystemSettings(): void {
-    alert('System settings saved.');
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
   }
 }

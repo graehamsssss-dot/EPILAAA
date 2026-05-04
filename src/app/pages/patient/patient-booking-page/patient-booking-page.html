@@ -1,5 +1,5 @@
 <div class="booking-page">
-  <div class="page-header panel">
+  <div class="page-header">
     <div class="panel-header">
       <h2>Book Appointment</h2>
       <p>Select a service, review available schedule details, and submit your booking.</p>
@@ -27,9 +27,8 @@
   </div>
 
   <section class="booking-layout">
-    <!-- LEFT: SERVICES -->
     <div class="left-column">
-      <div class="panel services-panel">
+      <div class="services-panel">
         <div class="panel-header">
           <h3>Available Services</h3>
           <p>Choose a service to auto-fill its schedule information.</p>
@@ -59,6 +58,7 @@
             </p>
 
             <div class="service-meta">
+              <div><strong>Specific Date:</strong> {{ service.schedule_date || 'Based on available days' }}</div>
               <div><strong>Available Days:</strong> {{ service.available_days }}</div>
               <div><strong>Time:</strong> {{ formatTime(service.start_time) }} - {{ formatTime(service.end_time) }}</div>
               <div><strong>Slot Limit:</strong> {{ service.slot_limit }}</div>
@@ -76,9 +76,8 @@
       </div>
     </div>
 
-    <!-- RIGHT: FORM + STATUS -->
     <div class="right-column">
-      <div class="panel booking-form-panel">
+      <div class="booking-form-panel">
         <div class="panel-header">
           <h3>Booking Form</h3>
           <p>The selected service details are filled automatically.</p>
@@ -107,18 +106,31 @@
 
           <div class="field">
             <label>Booking Date</label>
-            <input type="date" [(ngModel)]="selectedDate" />
+            <input
+              type="date"
+              [(ngModel)]="selectedDate"
+              [min]="minDate"
+              [readonly]="isFixedScheduleDate"
+              [disabled]="isFixedScheduleDate"
+              (change)="onDateChange()"
+            />
           </div>
 
           <div class="field">
             <label>Time Slot</label>
-            <select [(ngModel)]="selectedTime">
-              <option value="">Select time</option>
-              <option *ngFor="let time of timeOptions" [value]="time">
-                {{ formatTime(time) }}
+            <select [(ngModel)]="selectedTime" [disabled]="!selectedDate || isLoadingAvailability">
+              <option value="">
+                {{ isLoadingAvailability ? 'Loading slots...' : 'Select time' }}
+              </option>
+              <option *ngFor="let slot of availableTimeOptions" [value]="slot.time">
+                {{ formatTime(slot.time) }} • {{ slot.remaining }} slot(s) left
               </option>
             </select>
           </div>
+
+        <div class="notification-box full-width" *ngIf="selectedService.schedule_date">
+            This service is scheduled for {{ selectedService.schedule_date }}.
+        </div>
 
           <div class="field full-width">
             <label>Additional Notes</label>
@@ -129,12 +141,36 @@
             ></textarea>
           </div>
 
+          <div class="error-panel full-width" *ngIf="dateValidationMessage">
+            {{ dateValidationMessage }}
+          </div>
+
+          <div class="availability-box full-width" *ngIf="selectedDate && !dateValidationMessage && availableSlots.length > 0">
+            <h4>Slot Availability</h4>
+            <div class="availability-list">
+              <div
+                class="availability-item"
+                *ngFor="let slot of availableSlots"
+                [class.full]="!slot.available"
+              >
+                <span>{{ formatTime(slot.time) }}</span>
+                <strong>
+                  {{ slot.available ? (slot.remaining + ' slot(s) left') : 'Fully booked' }}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-box full-width" *ngIf="selectedDate && !dateValidationMessage && !isLoadingAvailability && availableSlots.length === 0">
+            No generated slots available for this date.
+          </div>
+
           <div class="form-actions">
             <button
               class="primary-btn"
               type="button"
               (click)="bookAppointment()"
-              [disabled]="isSubmitting"
+              [disabled]="isSubmitting || !selectedTime"
             >
               {{ isSubmitting ? 'Booking...' : 'Confirm Booking' }}
             </button>
@@ -148,7 +184,7 @@
         </ng-template>
       </div>
 
-      <div class="panel status-panel">
+      <div class="status-panel">
         <div class="panel-header">
           <h3>Booking Status</h3>
           <p>Your current and recent appointment requests.</p>

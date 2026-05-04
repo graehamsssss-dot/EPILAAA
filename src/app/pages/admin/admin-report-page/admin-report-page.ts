@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiAdminService } from '../../../core/services/api-admin.service';
+import { AdminPreloadService } from '../../../core/services/admin-preload.service';
 import { MonthlyReportItem } from '../../../core/models/admin.models';
 
 @Component({
@@ -12,27 +12,38 @@ import { MonthlyReportItem } from '../../../core/models/admin.models';
 })
 export class AdminReportPage implements OnInit {
   reports: MonthlyReportItem[] = [];
-  isLoading = false;
+  isLoading = true;
   errorMessage = '';
 
-  constructor(private apiAdminService: ApiAdminService) {}
+  constructor(private adminPreloadService: AdminPreloadService) {}
 
   ngOnInit(): void {
     this.loadReports();
   }
 
-  loadReports(): void {
+  loadReports(forceRefresh = false): void {
     this.isLoading = true;
+    this.errorMessage = '';
 
-    this.apiAdminService.getReports().subscribe({
+    this.adminPreloadService.getReportsCached(forceRefresh).subscribe({
       next: (response) => {
-        this.reports = response.data;
+        this.reports = response.data || [];
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorMessage = error?.error?.message || 'Failed to load reports.';
+        this.errorMessage =
+          error?.error?.message || 'Failed to load reports.';
         this.isLoading = false;
       }
     });
+  }
+
+  refreshReports(): void {
+    this.adminPreloadService.clearCache();
+    this.loadReports(true);
+  }
+
+  getMonthYear(report: MonthlyReportItem): string {
+    return `${report.report_month} ${report.report_year}`;
   }
 }

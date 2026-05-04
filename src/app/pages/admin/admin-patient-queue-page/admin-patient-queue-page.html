@@ -2,46 +2,35 @@
   <section class="panel">
     <div class="panel-header">
       <h2>Patient Queue</h2>
-      <p>Manage daily patient queue and service flow</p>
+      <p>Manage patient flow and update queue statuses.</p>
     </div>
 
-    <div class="feedback error-panel" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
+    <div class="feedback error-panel" *ngIf="errorMessage">{{ errorMessage }}</div>
 
     <div class="filter-grid">
       <div class="field">
         <label>Search</label>
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Search patient, service, or status" />
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search patient or service" />
       </div>
 
       <div class="field">
         <label>Date</label>
-        <input type="date" [(ngModel)]="selectedDate" (change)="loadQueue()" />
+        <input type="date" [(ngModel)]="selectedDate" />
       </div>
 
       <div class="field">
         <label>Service</label>
-        <input type="text" [(ngModel)]="selectedService" placeholder="Enter service name" />
+        <input type="text" [(ngModel)]="selectedService" placeholder="Service name" />
       </div>
 
       <div class="field button-field">
-        <button class="primary-btn" type="button" (click)="loadQueue()">Apply Filters</button>
+        <button class="primary-btn" (click)="loadQueue()">Apply</button>
       </div>
     </div>
   </section>
 
   <section class="panel">
-    <div class="panel-header">
-      <h3>Queue List</h3>
-      <p>{{ filteredQueue.length }} record(s)</p>
-    </div>
-
-    <div *ngIf="isLoading" class="empty-box">
-      Loading queue...
-    </div>
-
-    <div class="table-wrapper" *ngIf="!isLoading">
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
@@ -75,10 +64,6 @@
                 <button class="table-btn cancel" (click)="updateStatus(item.id, 'Cancelled')">Cancel</button>
               </div>
             </td>
-          </tr>
-
-          <tr *ngIf="filteredQueue.length === 0">
-            <td colspan="7" class="empty-state">No queue items found.</td>
           </tr>
         </tbody>
       </table>

@@ -216,3 +216,50 @@ export const me = async (req, res, next) => {
     next(error);
   }
 };
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return errorResponse(res, 'Current password and new password are required', 400);
+    }
+
+    if (newPassword.length < 6) {
+      return errorResponse(res, 'New password must be at least 6 characters', 400);
+    }
+
+    const [rows] = await pool.query(
+      `SELECT id, password_hash
+       FROM users
+       WHERE id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (!rows.length) {
+      return errorResponse(res, 'User not found', 404);
+    }
+
+    const user = rows[0];
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+
+    if (!isMatch) {
+      return errorResponse(res, 'Current password is incorrect', 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      `UPDATE users
+       SET password_hash = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [hashedPassword, req.user.id]
+    );
+
+    return successResponse(res, 'Password updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};

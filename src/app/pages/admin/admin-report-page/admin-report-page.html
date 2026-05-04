@@ -1,8 +1,16 @@
 <div class="report-page">
   <section class="panel">
-    <div class="panel-header">
-      <h2>Monthly Reports</h2>
-      <p>Review generated monthly report summaries</p>
+    <div class="panel-header header-row">
+      <div>
+        <h2>Reports</h2>
+        <p>Review monthly clinic reports and summary figures.</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="primary-btn" type="button" (click)="refreshReports()" [disabled]="isLoading">
+          {{ isLoading ? 'Loading...' : 'Refresh Reports' }}
+        </button>
+      </div>
     </div>
   </section>
 
@@ -15,17 +23,12 @@
   </section>
 
   <section class="panel" *ngIf="!isLoading && reports.length > 0">
-    <div class="panel-header">
-      <h3>Report Records</h3>
-      <p>{{ reports.length }} report(s)</p>
-    </div>
-
     <div class="report-list">
       <div class="report-card" *ngFor="let report of reports">
         <div class="report-card-top">
           <div>
-            <h4>{{ report.report_month }} {{ report.report_year }}</h4>
-            <p>Generated report summary</p>
+            <h4>{{ getMonthYear(report) }}</h4>
+            <p>Monthly report summary</p>
           </div>
         </div>
 
@@ -55,6 +58,6 @@
   </section>
 
   <section class="panel" *ngIf="!isLoading && reports.length === 0">
-    <div class="empty-box">No reports found.</div>
+    <div class="empty-box">No reports found yet.</div>
   </section>
 </div>

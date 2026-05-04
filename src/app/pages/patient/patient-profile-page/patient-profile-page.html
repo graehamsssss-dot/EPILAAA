@@ -22,9 +22,17 @@
   {{ errorMessage }}
 </div>
 
+<div *ngIf="successMessage" class="panel success-panel">
+  {{ successMessage }}
+</div>
+
 <div class="profile-page" *ngIf="!isLoading && patient">
   <div class="profile-actions">
-    <button class="refresh-btn" type="button" (click)="refreshProfile()" [disabled]="isRefreshing">
+    <button class="secondary-btn" type="button" *ngIf="!isEditing" (click)="startEdit()">
+      Edit Profile
+    </button>
+
+    <button class="refresh-btn" type="button" (click)="refreshProfile()" [disabled]="isRefreshing || isSaving">
       {{ isRefreshing ? 'Refreshing...' : 'Refresh Profile' }}
     </button>
   </div>
@@ -102,7 +110,7 @@
         <p>Current patient contact information</p>
       </div>
 
-      <div class="info-grid">
+      <div class="info-grid" *ngIf="!isEditing; else contactEditBlock">
         <div class="info-item">
           <span>Contact Number</span>
           <strong>{{ patient.contact_number }}</strong>
@@ -128,6 +136,35 @@
           <strong>{{ patient.address || '—' }}</strong>
         </div>
       </div>
+
+      <ng-template #contactEditBlock>
+        <div class="form-grid">
+          <div class="field">
+            <label>Contact Number *</label>
+            <input type="text" [(ngModel)]="editForm.contactNumber" />
+          </div>
+
+          <div class="field">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="editForm.email" />
+          </div>
+
+          <div class="field">
+            <label>Barangay *</label>
+            <input type="text" [(ngModel)]="editForm.barangay" />
+          </div>
+
+          <div class="field">
+            <label>Purok / Zone</label>
+            <input type="text" [(ngModel)]="editForm.purok" />
+          </div>
+
+          <div class="field full-width">
+            <label>Complete Address</label>
+            <input type="text" [(ngModel)]="editForm.address" />
+          </div>
+        </div>
+      </ng-template>
     </div>
 
     <div class="panel">
@@ -136,7 +173,7 @@
         <p>Emergency contact information</p>
       </div>
 
-      <div class="info-grid">
+      <div class="info-grid" *ngIf="!isEditing; else emergencyEditBlock">
         <div class="info-item">
           <span>Contact Name</span>
           <strong>{{ patient.emergency_contact_name }}</strong>
@@ -152,6 +189,25 @@
           <strong>{{ patient.emergency_relationship || '—' }}</strong>
         </div>
       </div>
+
+      <ng-template #emergencyEditBlock>
+        <div class="form-grid">
+          <div class="field">
+            <label>Contact Name *</label>
+            <input type="text" [(ngModel)]="editForm.emergencyContactName" />
+          </div>
+
+          <div class="field">
+            <label>Contact Number *</label>
+            <input type="text" [(ngModel)]="editForm.emergencyContactNumber" />
+          </div>
+
+          <div class="field full-width">
+            <label>Relationship</label>
+            <input type="text" [(ngModel)]="editForm.emergencyRelationship" />
+          </div>
+        </div>
+      </ng-template>
     </div>
   </section>
 
@@ -161,7 +217,7 @@
       <p>Saved healthcare-related details</p>
     </div>
 
-    <div class="info-grid">
+    <div class="info-grid" *ngIf="!isEditing; else medicalEditBlock">
       <div class="info-item">
         <span>PhilHealth ID</span>
         <strong>{{ patient.philhealth_id || '—' }}</strong>
@@ -181,6 +237,39 @@
         <span>Existing Conditions</span>
         <strong>{{ patient.existing_conditions || 'None reported' }}</strong>
       </div>
+    </div>
+
+    <ng-template #medicalEditBlock>
+      <div class="form-grid">
+        <div class="field">
+          <label>PhilHealth ID</label>
+          <input type="text" [(ngModel)]="editForm.philhealthId" />
+        </div>
+
+        <div class="field">
+          <label>Blood Type</label>
+          <input type="text" [(ngModel)]="editForm.bloodType" />
+        </div>
+
+        <div class="field full-width">
+          <label>Known Allergies</label>
+          <textarea rows="3" [(ngModel)]="editForm.allergies"></textarea>
+        </div>
+
+        <div class="field full-width">
+          <label>Existing Conditions</label>
+          <textarea rows="3" [(ngModel)]="editForm.existingConditions"></textarea>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="form-actions" *ngIf="isEditing">
+      <button class="primary-btn" type="button" (click)="saveProfile()" [disabled]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+      <button class="secondary-btn" type="button" (click)="cancelEdit()" [disabled]="isSaving">
+        Cancel
+      </button>
     </div>
   </section>
 </div>

@@ -1,11 +1,11 @@
 import express from 'express';
 import {
-  getInventory,
-  createInventoryItem,
-  updateInventoryItem,
-  restockInventoryItem,
   archiveInventoryItem,
-  getInventoryLogs
+  createInventoryItem,
+  getInventory,
+  getInventoryLogs,
+  restockInventoryItem,
+  updateInventoryItem
 } from '../controllers/inventory.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { authorizeRoles } from '../middleware/role.middleware.js';

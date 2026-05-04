@@ -35,8 +35,14 @@ export class ApiAuthService {
       `${API_BASE_URL}/auth/me`
     );
   }
-  
-  
-  
 
+  changePassword(payload: {
+    currentPassword: string;
+    newPassword: string;
+  }): Observable<ApiResponse<null>> {
+    return this.http.patch<ApiResponse<null>>(
+      `${API_BASE_URL}/auth/change-password`,
+      payload
+    );
+  }
 }

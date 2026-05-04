@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiServiceService } from '../../../core/services/api-service.service';
 import { ApiBookingService } from '../../../core/services/api-booking.service';
-import { ServiceItem } from '../../../core/models/service.models';
+import {
+  ServiceAvailabilitySlot,
+  ServiceItem
+} from '../../../core/models/service.models';
 import { BookingItem } from '../../../core/models/booking.models';
 
 @Component({
@@ -22,30 +25,16 @@ export class PatientBookingPage implements OnInit {
 
   bookingMessage = '';
   errorMessage = '';
-  notificationMessage = 'Select a service on the left to auto-fill available schedule details.';
+  notificationMessage =
+    'Select a service on the left to auto-fill available schedule details.';
   isLoadingServices = false;
   isLoadingBookings = false;
   isSubmitting = false;
+  isLoadingAvailability = false;
 
   services: ServiceItem[] = [];
   bookings: BookingItem[] = [];
-
-  timeOptions = [
-    '08:00:00',
-    '08:30:00',
-    '09:00:00',
-    '09:30:00',
-    '10:00:00',
-    '10:30:00',
-    '11:00:00',
-    '11:30:00',
-    '13:00:00',
-    '13:30:00',
-    '14:00:00',
-    '14:30:00',
-    '15:00:00',
-    '15:30:00'
-  ];
+  availableSlots: ServiceAvailabilitySlot[] = [];
 
   constructor(
     private apiServiceService: ApiServiceService,
@@ -62,7 +51,7 @@ export class PatientBookingPage implements OnInit {
 
     this.apiServiceService.getServices().subscribe({
       next: (response) => {
-        this.services = response.data.filter(item => item.status === 'Active');
+        this.services = response.data.filter((item) => item.status === 'Active');
         this.isLoadingServices = false;
       },
       error: (error) => {
@@ -92,31 +81,173 @@ export class PatientBookingPage implements OnInit {
   get filteredServices(): ServiceItem[] {
     const term = this.searchTerm.trim().toLowerCase();
 
-    if (!term) {
-      return this.services;
-    }
+    if (!term) return this.services;
 
-    return this.services.filter(service =>
-      service.service_name.toLowerCase().includes(term) ||
-      service.category.toLowerCase().includes(term) ||
-      (service.description || '').toLowerCase().includes(term)
+    return this.services.filter(
+      (service) =>
+        service.service_name.toLowerCase().includes(term) ||
+        service.category.toLowerCase().includes(term) ||
+        (service.description || '').toLowerCase().includes(term)
     );
   }
 
   get selectedService(): ServiceItem | undefined {
-    return this.services.find(service => service.id === this.selectedServiceId);
+    return this.services.find((service) => service.id === this.selectedServiceId);
+  }
+
+  get isFixedScheduleDate(): boolean {
+    return !!this.selectedService?.schedule_date;
   }
 
   chooseService(serviceId: number): void {
     this.selectedServiceId = serviceId;
+    this.selectedDate = '';
+    this.selectedTime = '';
+    this.notes = '';
+    this.availableSlots = [];
     this.bookingMessage = '';
     this.errorMessage = '';
-    this.notes = '';
 
     const service = this.selectedService;
-    if (service) {
-      this.notificationMessage = `${service.service_name} selected. Available on ${service.available_days} from ${this.formatTime(service.start_time)} to ${this.formatTime(service.end_time)}.`;
+
+    if (service?.schedule_date) {
+      this.selectedDate = service.schedule_date;
     }
+
+    if (service) {
+      this.notificationMessage = `${service.service_name} selected. Available on ${service.schedule_date || service.available_days} from ${this.formatTime(service.start_time)} to ${this.formatTime(service.end_time)}.`;
+    }
+
+    if (this.selectedDate) {
+      this.onDateChange();
+    }
+  }
+
+  onDateChange(): void {
+    this.selectedTime = '';
+    this.availableSlots = [];
+
+    if (!this.selectedService || !this.selectedDate) return;
+
+    if (!this.isSelectedDateValid()) {
+      return;
+    }
+
+    this.loadAvailability();
+  }
+
+  loadAvailability(): void {
+    if (!this.selectedService || !this.selectedDate) return;
+
+    this.isLoadingAvailability = true;
+    this.errorMessage = '';
+
+    this.apiServiceService
+      .getServiceAvailability(this.selectedService.id, this.selectedDate)
+      .subscribe({
+        next: (response) => {
+          this.availableSlots = response.data.slots;
+          this.isLoadingAvailability = false;
+
+          const openSlots = this.availableSlots.filter((slot) => slot.available);
+          if (!openSlots.length) {
+            this.notificationMessage =
+              'No available slots left for the selected date.';
+          } else {
+            this.notificationMessage =
+              'Available slots loaded for the selected date.';
+          }
+        },
+        error: (error) => {
+          this.errorMessage =
+            error?.error?.message || 'Failed to load slot availability.';
+          this.isLoadingAvailability = false;
+        }
+      });
+  }
+
+  normalizeAvailableDays(days: string): string[] {
+    const text = days.toLowerCase().trim();
+
+    if (text.includes('mon to sat')) {
+      return [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday'
+      ];
+    }
+
+    if (text.includes('mon to fri')) {
+      return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    }
+
+    if (text.includes('daily')) {
+      return [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday'
+      ];
+    }
+
+    return text
+      .split(',')
+      .map((item) => item.trim())
+      .map((item) => {
+        if (item.startsWith('mon')) return 'monday';
+        if (item.startsWith('tue')) return 'tuesday';
+        if (item.startsWith('wed')) return 'wednesday';
+        if (item.startsWith('thu')) return 'thursday';
+        if (item.startsWith('fri')) return 'friday';
+        if (item.startsWith('sat')) return 'saturday';
+        if (item.startsWith('sun')) return 'sunday';
+        return item;
+      });
+  }
+
+  isSelectedDateValid(): boolean {
+    if (!this.selectedService || !this.selectedDate) return false;
+
+    if (this.selectedService.schedule_date) {
+      return this.selectedDate === this.selectedService.schedule_date;
+    }
+
+    const allowedDays = this.normalizeAvailableDays(
+      this.selectedService.available_days
+    );
+    const date = new Date(this.selectedDate);
+    const selectedDay = date
+      .toLocaleDateString('en-US', { weekday: 'long' })
+      .toLowerCase();
+
+    return allowedDays.includes(selectedDay);
+  }
+
+  get dateValidationMessage(): string {
+    if (!this.selectedService || !this.selectedDate) return '';
+
+    if (this.isSelectedDateValid()) return '';
+
+    if (this.selectedService.schedule_date) {
+      return `This service is only available on ${this.selectedService.schedule_date}.`;
+    }
+
+    return `Selected date does not match ${this.selectedService.service_name}'s available days: ${this.selectedService.available_days}.`;
+  }
+
+  get minDate(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  get availableTimeOptions(): ServiceAvailabilitySlot[] {
+    return this.availableSlots.filter((slot) => slot.available);
   }
 
   bookAppointment(): void {
@@ -124,34 +255,53 @@ export class PatientBookingPage implements OnInit {
     this.errorMessage = '';
 
     if (!this.selectedService || !this.selectedDate || !this.selectedTime) {
-      this.errorMessage = 'Please select a service, booking date, and time.';
+      this.errorMessage =
+        'Please select a service, booking date, and time.';
+      return;
+    }
+
+    if (!this.isSelectedDateValid()) {
+      this.errorMessage = this.dateValidationMessage;
+      return;
+    }
+
+    const chosenSlot = this.availableSlots.find(
+      (slot) => slot.time === this.selectedTime && slot.available
+    );
+
+    if (!chosenSlot) {
+      this.errorMessage = 'Selected time slot is no longer available.';
       return;
     }
 
     this.isSubmitting = true;
 
-    this.apiBookingService.createBooking({
-      serviceId: this.selectedService.id,
-      bookingDate: this.selectedDate,
-      bookingTime: this.selectedTime,
-      notes: this.notes
-    }).subscribe({
-      next: () => {
-        this.bookingMessage = 'Appointment booked successfully.';
-        this.notificationMessage = 'Your booking was submitted. Please monitor the booking status below.';
-        this.selectedDate = '';
-        this.selectedTime = '';
-        this.notes = '';
-        this.isSubmitting = false;
-        this.loadBookings();
-      },
-      error: (error) => {
-        this.errorMessage =
-          error?.error?.message || 'Booking failed.';
-        this.notificationMessage = 'Booking could not be completed. Please review your selected schedule.';
-        this.isSubmitting = false;
-      }
-    });
+    this.apiBookingService
+      .createBooking({
+        serviceId: this.selectedService.id,
+        bookingDate: this.selectedDate,
+        bookingTime: this.selectedTime,
+        notes: this.notes
+      })
+      .subscribe({
+        next: () => {
+          this.bookingMessage = 'Appointment booked successfully.';
+          this.notificationMessage =
+            'Your booking was submitted. Please monitor the booking status below.';
+          this.selectedDate = '';
+          this.selectedTime = '';
+          this.notes = '';
+          this.availableSlots = [];
+          this.isSubmitting = false;
+          this.loadBookings();
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'Booking failed.';
+          this.notificationMessage =
+            'Booking could not be completed. Please review your selected schedule.';
+          this.isSubmitting = false;
+        }
+      });
   }
 
   cancelBooking(booking: BookingItem): void {

@@ -1,17 +1,50 @@
 import { pool } from '../config/db.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
-const computeInventoryStatus = (stock, threshold) => {
-  return stock <= threshold ? 'Low Stock' : 'In Stock';
+const computeStatus = (currentStock, lowStockThreshold) => {
+  if (currentStock <= 0) return 'Low Stock';
+  if (currentStock <= lowStockThreshold) return 'Low Stock';
+  return 'In Stock';
 };
 
 export const getInventory = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM inventory_items ORDER BY id DESC'
+      `SELECT
+         id,
+         item_name,
+         linked_service,
+         current_stock,
+         low_stock_threshold,
+         status,
+         created_at,
+         updated_at
+       FROM inventory_items
+       ORDER BY item_name ASC`
     );
 
     return successResponse(res, 'Inventory fetched', rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInventoryLogs = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         l.id,
+         i.item_name,
+         l.action_type,
+         l.quantity,
+         l.remarks,
+         l.created_at
+       FROM inventory_logs l
+       INNER JOIN inventory_items i ON i.id = l.inventory_item_id
+       ORDER BY l.created_at DESC`
+    );
+
+    return successResponse(res, 'Inventory logs fetched', rows);
   } catch (error) {
     next(error);
   }
@@ -21,40 +54,38 @@ export const createInventoryItem = async (req, res, next) => {
   try {
     const { itemName, linkedService, currentStock, lowStockThreshold } = req.body;
 
-    if (!itemName || !linkedService) {
-      return errorResponse(res, 'Missing required inventory fields', 400);
+    if (!itemName) {
+      return errorResponse(res, 'Item name is required', 400);
     }
 
     const stock = Number(currentStock || 0);
     const threshold = Number(lowStockThreshold || 10);
-    const status = computeInventoryStatus(stock, threshold);
+    const status = computeStatus(stock, threshold);
 
     const [result] = await pool.query(
-      `INSERT INTO inventory_items
-      (
-        item_name,
-        linked_service,
-        current_stock,
-        low_stock_threshold,
-        status
-      )
-      VALUES (?, ?, ?, ?, ?)`,
-      [itemName, linkedService, stock, threshold, status]
+      `INSERT INTO inventory_items (
+         item_name,
+         linked_service,
+         current_stock,
+         low_stock_threshold,
+         status
+       ) VALUES (?, ?, ?, ?, ?)`,
+      [itemName, linkedService || null, stock, threshold, status]
     );
 
     await pool.query(
-      `INSERT INTO inventory_logs
-      (
-        inventory_item_id,
-        action_type,
-        quantity,
-        remarks
-      )
-      VALUES (?, ?, ?, ?)`,
-      [result.insertId, 'Added', stock, 'Initial inventory item creation']
+      `INSERT INTO inventory_logs (
+         inventory_item_id,
+         action_type,
+         quantity,
+         remarks
+       ) VALUES (?, 'Added', ?, ?)`,
+      [result.insertId, stock, 'Initial inventory item creation']
     );
 
-    return successResponse(res, 'Inventory item created', { id: result.insertId }, 201);
+    return successResponse(res, 'Inventory item created', {
+      id: result.insertId
+    });
   } catch (error) {
     next(error);
   }
@@ -67,31 +98,28 @@ export const updateInventoryItem = async (req, res, next) => {
 
     const stock = Number(currentStock || 0);
     const threshold = Number(lowStockThreshold || 10);
-    const status = computeInventoryStatus(stock, threshold);
+    const status = computeStatus(stock, threshold);
 
     await pool.query(
       `UPDATE inventory_items
-       SET
-         item_name = ?,
-         linked_service = ?,
-         current_stock = ?,
-         low_stock_threshold = ?,
-         status = ?,
-         updated_at = CURRENT_TIMESTAMP
+       SET item_name = ?,
+           linked_service = ?,
+           current_stock = ?,
+           low_stock_threshold = ?,
+           status = ?,
+           updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [itemName, linkedService, stock, threshold, status, id]
+      [itemName, linkedService || null, stock, threshold, status, id]
     );
 
     await pool.query(
-      `INSERT INTO inventory_logs
-      (
-        inventory_item_id,
-        action_type,
-        quantity,
-        remarks
-      )
-      VALUES (?, ?, ?, ?)`,
-      [id, 'Updated', stock, 'Inventory item updated']
+      `INSERT INTO inventory_logs (
+         inventory_item_id,
+         action_type,
+         quantity,
+         remarks
+       ) VALUES (?, 'Updated', ?, ?)`,
+      [id, stock, 'Inventory item updated']
     );
 
     return successResponse(res, 'Inventory item updated');
@@ -108,11 +136,14 @@ export const restockInventoryItem = async (req, res, next) => {
     const qty = Number(quantity || 0);
 
     if (qty <= 0) {
-      return errorResponse(res, 'Restock quantity must be greater than zero', 400);
+      return errorResponse(res, 'Restock quantity must be greater than 0', 400);
     }
 
     const [rows] = await pool.query(
-      'SELECT current_stock, low_stock_threshold FROM inventory_items WHERE id = ? LIMIT 1',
+      `SELECT id, current_stock, low_stock_threshold
+       FROM inventory_items
+       WHERE id = ?
+       LIMIT 1`,
       [id]
     );
 
@@ -120,26 +151,27 @@ export const restockInventoryItem = async (req, res, next) => {
       return errorResponse(res, 'Inventory item not found', 404);
     }
 
-    const newStock = Number(rows[0].current_stock) + qty;
-    const status = computeInventoryStatus(newStock, rows[0].low_stock_threshold);
+    const item = rows[0];
+    const newStock = Number(item.current_stock) + qty;
+    const status = computeStatus(newStock, Number(item.low_stock_threshold));
 
     await pool.query(
       `UPDATE inventory_items
-       SET current_stock = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+       SET current_stock = ?,
+           status = ?,
+           updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [newStock, status, id]
     );
 
     await pool.query(
-      `INSERT INTO inventory_logs
-      (
-        inventory_item_id,
-        action_type,
-        quantity,
-        remarks
-      )
-      VALUES (?, ?, ?, ?)`,
-      [id, 'Restocked', qty, 'Inventory restocked']
+      `INSERT INTO inventory_logs (
+         inventory_item_id,
+         action_type,
+         quantity,
+         remarks
+       ) VALUES (?, 'Restocked', ?, ?)`,
+      [id, qty, 'Inventory restocked']
     );
 
     return successResponse(res, 'Inventory item restocked');
@@ -154,45 +186,23 @@ export const archiveInventoryItem = async (req, res, next) => {
 
     await pool.query(
       `UPDATE inventory_items
-       SET status = 'Archived', updated_at = CURRENT_TIMESTAMP
+       SET status = 'Archived',
+           updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [id]
     );
 
     await pool.query(
-      `INSERT INTO inventory_logs
-      (
-        inventory_item_id,
-        action_type,
-        quantity,
-        remarks
-      )
-      VALUES (?, ?, ?, ?)`,
-      [id, 'Archived', 0, 'Inventory item archived']
+      `INSERT INTO inventory_logs (
+         inventory_item_id,
+         action_type,
+         quantity,
+         remarks
+       ) VALUES (?, 'Archived', 0, ?)`,
+      [id, 'Inventory item archived']
     );
 
     return successResponse(res, 'Inventory item archived');
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getInventoryLogs = async (req, res, next) => {
-  try {
-    const [rows] = await pool.query(
-      `SELECT
-         il.id,
-         ii.item_name,
-         il.action_type,
-         il.quantity,
-         il.remarks,
-         il.created_at
-       FROM inventory_logs il
-       INNER JOIN inventory_items ii ON ii.id = il.inventory_item_id
-       ORDER BY il.id DESC`
-    );
-
-    return successResponse(res, 'Inventory logs fetched', rows);
   } catch (error) {
     next(error);
   }

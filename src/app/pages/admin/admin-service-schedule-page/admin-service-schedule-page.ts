@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiAdminService } from '../../../core/services/api-admin.service';
+import { AdminPreloadService } from '../../../core/services/admin-preload.service';
 import { ServiceItem } from '../../../core/models/service.models';
 
 @Component({
@@ -33,7 +34,10 @@ export class AdminServiceSchedulePage implements OnInit {
   editingId: number | null = null;
   searchTerm = '';
 
-  constructor(private apiAdminService: ApiAdminService) {}
+  constructor(
+    private apiAdminService: ApiAdminService,
+    private adminPreloadService: AdminPreloadService
+  ) {}
 
   ngOnInit(): void {
     this.loadServices();
@@ -45,6 +49,7 @@ export class AdminServiceSchedulePage implements OnInit {
       category: 'general check up',
       description: '',
       availableDays: '',
+      scheduleDate: '',
       startTime: '',
       endTime: '',
       slotLimit: 0,
@@ -53,12 +58,13 @@ export class AdminServiceSchedulePage implements OnInit {
     };
   }
 
-  loadServices(): void {
+  loadServices(forceRefresh = false): void {
     this.isLoading = true;
+    this.errorMessage = '';
 
-    this.apiAdminService.getServices().subscribe({
+    this.adminPreloadService.getServicesCached(forceRefresh).subscribe({
       next: (response) => {
-        this.services = response.data;
+        this.services = response.data || [];
         this.isLoading = false;
       },
       error: (error) => {
@@ -78,7 +84,8 @@ export class AdminServiceSchedulePage implements OnInit {
     return this.services.filter(service =>
       service.service_name.toLowerCase().includes(term) ||
       service.category.toLowerCase().includes(term) ||
-      service.status.toLowerCase().includes(term)
+      service.status.toLowerCase().includes(term) ||
+      (service.schedule_date || '').toLowerCase().includes(term)
     );
   }
 
@@ -92,8 +99,9 @@ export class AdminServiceSchedulePage implements OnInit {
       this.apiAdminService.updateService(this.editingId, payload).subscribe({
         next: () => {
           this.successMessage = 'Service updated successfully.';
+          this.adminPreloadService.clearCache();
           this.resetForm();
-          this.loadServices();
+          this.loadServices(true);
         },
         error: (error) => {
           this.errorMessage = error?.error?.message || 'Failed to update service.';
@@ -103,8 +111,9 @@ export class AdminServiceSchedulePage implements OnInit {
       this.apiAdminService.createService(payload).subscribe({
         next: () => {
           this.successMessage = 'Service created successfully.';
+          this.adminPreloadService.clearCache();
           this.resetForm();
-          this.loadServices();
+          this.loadServices(true);
         },
         error: (error) => {
           this.errorMessage = error?.error?.message || 'Failed to create service.';
@@ -119,6 +128,7 @@ export class AdminServiceSchedulePage implements OnInit {
       category: item.category,
       description: item.description || '',
       availableDays: item.available_days,
+      scheduleDate: item.schedule_date || '',
       startTime: item.start_time,
       endTime: item.end_time,
       slotLimit: item.slot_limit,
@@ -128,18 +138,29 @@ export class AdminServiceSchedulePage implements OnInit {
 
     this.editMode = true;
     this.editingId = item.id;
+    this.successMessage = '';
+    this.errorMessage = '';
   }
 
   removeService(id: number): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.apiAdminService.deleteService(id).subscribe({
       next: () => {
         this.successMessage = 'Service deleted successfully.';
-        this.loadServices();
+        this.adminPreloadService.clearCache();
+        this.loadServices(true);
       },
       error: (error) => {
         this.errorMessage = error?.error?.message || 'Failed to delete service.';
       }
     });
+  }
+
+  refreshServices(): void {
+    this.adminPreloadService.clearCache();
+    this.loadServices(true);
   }
 
   resetForm(): void {

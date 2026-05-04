@@ -11,8 +11,12 @@ import inventoryRoutes from './routes/inventory.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import userRoutes from './routes/user.routes.js';
 
-import { globalErrorHandler, notFoundHandler } from './middleware/error.middleware.js';
+import {
+  globalErrorHandler,
+  notFoundHandler
+} from './middleware/error.middleware.js';
 
 const app = express();
 
@@ -41,6 +45,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/users', userRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);

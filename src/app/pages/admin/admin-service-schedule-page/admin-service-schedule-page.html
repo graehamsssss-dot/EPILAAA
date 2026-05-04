@@ -1,41 +1,47 @@
 <div class="service-page">
   <section class="panel">
-    <div class="panel-header">
-      <h2>Service Schedule</h2>
-      <p>Create and manage clinic services and their schedules</p>
+    <div class="panel-header header-row">
+      <div>
+        <h2>Service Schedule</h2>
+        <p>Create, edit, and manage clinic services and their schedules.</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="primary-btn" type="button" (click)="refreshServices()" [disabled]="isLoading">
+          {{ isLoading ? 'Loading...' : 'Refresh Services' }}
+        </button>
+      </div>
     </div>
 
-    <div class="feedback error-panel" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
-
-    <div class="feedback success-panel" *ngIf="successMessage">
-      {{ successMessage }}
-    </div>
+    <div class="feedback error-panel" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="feedback success-panel" *ngIf="successMessage">{{ successMessage }}</div>
 
     <div class="form-grid">
       <div class="field">
         <label>Service Name</label>
-        <input type="text" [(ngModel)]="form.serviceName" placeholder="Enter service name" />
+        <input type="text" [(ngModel)]="form.serviceName" />
       </div>
 
       <div class="field">
         <label>Category</label>
         <select [(ngModel)]="form.category">
-          <option *ngFor="let category of categories" [value]="category">
-            {{ category }}
-          </option>
+          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
         </select>
       </div>
 
       <div class="field full-width">
         <label>Description</label>
-        <textarea [(ngModel)]="form.description" rows="3" placeholder="Enter description"></textarea>
+        <textarea [(ngModel)]="form.description" rows="3"></textarea>
       </div>
 
       <div class="field">
         <label>Available Days</label>
         <input type="text" [(ngModel)]="form.availableDays" placeholder="Mon, Wed, Fri" />
+      </div>
+
+      <div class="field">
+        <label>Specific Schedule Date</label>
+        <input type="date" [(ngModel)]="form.scheduleDate" />
       </div>
 
       <div class="field">
@@ -63,43 +69,37 @@
 
       <div class="field">
         <label>Linked Inventory Items</label>
-        <input type="text" [(ngModel)]="form.linkedInventoryItems" placeholder="Comma-separated items" />
+        <input type="text" [(ngModel)]="form.linkedInventoryItems" />
       </div>
     </div>
 
     <div class="form-actions">
-      <button class="primary-btn" type="button" (click)="saveService()">
+      <button class="primary-btn" (click)="saveService()">
         {{ editMode ? 'Update Service' : 'Add Service' }}
       </button>
-
-      <button class="secondary-btn" type="button" *ngIf="editMode" (click)="resetForm()">
-        Cancel
-      </button>
+      <button class="secondary-btn" *ngIf="editMode" (click)="resetForm()">Cancel</button>
     </div>
   </section>
 
   <section class="panel">
     <div class="panel-header header-row">
       <div>
-        <h3>Service List</h3>
+        <h3>Services</h3>
         <p>Existing service schedules</p>
       </div>
 
       <div class="search-box">
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Search service, category, or status" />
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search service" />
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="empty-box">
-      Loading services...
-    </div>
-
-    <div class="table-wrapper" *ngIf="!isLoading">
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
             <th>Service</th>
             <th>Category</th>
+            <th>Schedule Date</th>
             <th>Days</th>
             <th>Time</th>
             <th>Slots</th>
@@ -112,6 +112,7 @@
           <tr *ngFor="let item of filteredServices">
             <td>{{ item.service_name }}</td>
             <td>{{ item.category }}</td>
+            <td>{{ item.schedule_date || 'Flexible' }}</td>
             <td>{{ item.available_days }}</td>
             <td>{{ item.start_time }} - {{ item.end_time }}</td>
             <td>{{ item.slot_limit }}</td>
@@ -129,7 +130,7 @@
           </tr>
 
           <tr *ngIf="filteredServices.length === 0">
-            <td colspan="7" class="empty-state">No services found.</td>
+            <td colspan="8" class="empty-state">No services found.</td>
           </tr>
         </tbody>
       </table>

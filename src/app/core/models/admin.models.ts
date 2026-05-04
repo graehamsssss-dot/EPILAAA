@@ -48,3 +48,21 @@ export interface MonthlyReportItem {
   created_at: string;
   updated_at: string;
 }
+
+export interface DashboardPoint {
+  label: string;
+  value: number;
+}
+
+export interface DashboardAnalytics {
+  selectedRange: string;
+  monthlyConsultations: DashboardPoint[];
+  serviceDistribution: DashboardPoint[];
+  upcomingQueue: QueueItem[];
+  reminders: string[];
+  lowStockItems: {
+    itemName: string;
+    currentStock: number;
+    lowStockThreshold: number;
+  }[];
+}

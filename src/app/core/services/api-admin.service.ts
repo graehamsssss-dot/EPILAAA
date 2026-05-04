@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../constants/api.constants';
 import { ApiResponse } from '../models/auth.models';
 import {
+  DashboardAnalytics,
   DashboardSummary,
   InventoryItem,
   InventoryLogItem,
@@ -24,20 +25,55 @@ export class ApiAdminService {
     );
   }
 
+  getDashboardAnalytics(range?: string): Observable<ApiResponse<DashboardAnalytics>> {
+    const params = new URLSearchParams();
+
+    if (range) params.set('range', range);
+
+    const query = params.toString();
+    const url = query
+      ? `${API_BASE_URL}/dashboard/analytics?${query}`
+      : `${API_BASE_URL}/dashboard/analytics`;
+
+    return this.http.get<ApiResponse<DashboardAnalytics>>(url);
+  }
+
   getServices(): Observable<ApiResponse<ServiceItem[]>> {
     return this.http.get<ApiResponse<ServiceItem[]>>(
       `${API_BASE_URL}/services`
     );
   }
 
-  createService(payload: any): Observable<ApiResponse<{ id: number }>> {
+  createService(payload: {
+    serviceName: string;
+    category: string;
+    description: string;
+    availableDays: string;
+    scheduleDate: string;
+    startTime: string;
+    endTime: string;
+    slotLimit: number;
+    status: string;
+    linkedInventoryItems: string;
+  }): Observable<ApiResponse<{ id: number }>> {
     return this.http.post<ApiResponse<{ id: number }>>(
       `${API_BASE_URL}/services`,
       payload
     );
   }
 
-  updateService(id: number, payload: any): Observable<ApiResponse<null>> {
+  updateService(id: number, payload: {
+    serviceName: string;
+    category: string;
+    description: string;
+    availableDays: string;
+    scheduleDate: string;
+    startTime: string;
+    endTime: string;
+    slotLimit: number;
+    status: string;
+    linkedInventoryItems: string;
+  }): Observable<ApiResponse<null>> {
     return this.http.put<ApiResponse<null>>(
       `${API_BASE_URL}/services/${id}`,
       payload
@@ -83,14 +119,24 @@ export class ApiAdminService {
     );
   }
 
-  createInventoryItem(payload: any): Observable<ApiResponse<{ id: number }>> {
+  createInventoryItem(payload: {
+    itemName: string;
+    linkedService: string;
+    currentStock: number;
+    lowStockThreshold: number;
+  }): Observable<ApiResponse<{ id: number }>> {
     return this.http.post<ApiResponse<{ id: number }>>(
       `${API_BASE_URL}/inventory`,
       payload
     );
   }
 
-  updateInventoryItem(id: number, payload: any): Observable<ApiResponse<null>> {
+  updateInventoryItem(id: number, payload: {
+    itemName: string;
+    linkedService: string;
+    currentStock: number;
+    lowStockThreshold: number;
+  }): Observable<ApiResponse<null>> {
     return this.http.put<ApiResponse<null>>(
       `${API_BASE_URL}/inventory/${id}`,
       payload
